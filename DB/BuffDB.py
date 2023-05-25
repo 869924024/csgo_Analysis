@@ -13,15 +13,16 @@ db_config = {
     'raise_on_warnings': True
 }
 
-# 创建数据库连接
-cnx = mysql.connector.connect(**db_config)
-cursor = cnx.cursor()
+
 
 
 # 爬取数据并插入表中
 def crawl_and_insert_data():
     page_num = 1
     while True:
+        # 创建数据库连接
+        cnx = mysql.connector.connect(**db_config)
+        cursor = cnx.cursor()
         # 发送请求获取数据
         session = requests.Session()
         url = f"https://buff.163.com/api/market/goods?game=csgo&page_num={page_num}&use_suggestion=0&_=1684772175087"
@@ -102,13 +103,17 @@ def crawl_and_insert_data():
         # 若页数总页数，则重置页数
         if page_num >= total_page+1:
             page_num = 1
+        # 关闭数据库连接
+        cursor.close()
+        cnx.close()
 
-    # 关闭数据库连接
-    cursor.close()
-    cnx.close()
+
 
 # 插入标签表
 def insert_tags(productsId,tagsId,category,internal_name,localized_name):
+    # 创建数据库连接
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
     # 检查标签是否已存在
     select_query = "SELECT id FROM tags WHERE id = %s"
     cursor.execute(select_query, (str(tagsId),))
@@ -134,7 +139,9 @@ def insert_tags(productsId,tagsId,category,internal_name,localized_name):
     print(f"关联饰品和标签成功！关联饰品ID：{productsId}，关联标签ID：{tagsId}")
     # 提交事务
     cnx.commit()
-
+# 关闭数据库连接
+    cursor.close()
+    cnx.close()
 # 调用函数执行爬取和插入操作
 crawl_and_insert_data()
 
