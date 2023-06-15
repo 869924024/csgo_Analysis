@@ -1,10 +1,14 @@
 import sys
+import threading
 import time
-
+import logging
 import requests
 import json
 import mysql.connector
 from concurrent.futures import ThreadPoolExecutor
+
+# 创建锁对象 间隔一定毫秒一次请求，不然会被熔断
+lock = threading.Lock()
 
 # 数据库连接配置
 db_config = {
@@ -45,54 +49,65 @@ db_pool = mysql.connector.pooling.MySQLConnectionPool(**db_config)
 
 
 def inserTemplate_FromID(template_id, connection):
-    # 请求数据
-    data = {
-        "appVersion": "5.1.1",
-        "gameId": 730,
-        "SessionId": "17A06643-B466-45ED-8495-15D11313572B",
-        "AppType": "3",
-        "templateId": template_id,
-        "Platform": "ios",
-        "Version": "5.1.1",
-        "listType": 15,
-    }
+    try:
+        # 获取锁
+        lock.acquire()
+        # 请求数据
+        data = {
+            "appVersion": "5.1.1",
+            "gameId": 730,
+            "SessionId": "17A06643-B466-45ED-8495-15D11313572B",
+            "AppType": "3",
+            "templateId": template_id,
+            "Platform": "ios",
+            "Version": "5.1.1",
+            "listType": 15,
+        }
 
-    # 判断数据是否已存在
-    sql_select = "SELECT * FROM youpin_template WHERE id = %s"
-    cursor = connection.cursor()
-    cursor.execute(sql_select, (template_id,))
-    result = cursor.fetchone()
-    if result:
-        print("饰品id：", result[0], "饰品名:", result[1], "数据已存在，不进行插入操作")
+        # 判断数据是否已存在
+        sql_select = "SELECT * FROM youpin_template WHERE id = %s"
+        cursor = connection.cursor()
+        cursor.execute(sql_select, (template_id,))
+        result = cursor.fetchone()
+        if result:
+            # print("饰品id：", result[0], "饰品名:", result[1], "数据已存在，不进行插入操作")
+            cursor.close()
+            return
+
+        # 请求URL
+        url = "https://api.youpin898.com/api/homepage/v2/detail/template/info"
+
+        # 发送POST请求
+        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=5)
+
+        # 解析响应数据
+        response_data = json.loads(response.text)
+
+        # 提取饰品数据
+        template_info = response_data["Data"]["TemplateInfo"]
+        # template_info 为null返回
+        if not template_info:
+            # print("饰品id：", template_id, "不存在")
+            cursor.close()
+            return
+
+        # 插入数据到数据库
+        sql_insert = "INSERT INTO youpin_template (Id,CommodityName, CommodityHashName, GroupHashName, IconUrl, TypeName, Exterior, Rarity, Quality) VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s)"
+        values = (template_info["Id"], template_info["CommodityName"], template_info["CommodityHashName"],
+                  template_info["GroupHashName"], template_info["IconUrl"], template_info["TypeName"],
+                  template_info["Exterior"], template_info["Rarity"], template_info["Quality"])
+        cursor.execute(sql_insert, values)
+        connection.commit()
         cursor.close()
-        return
+        print("饰品：", template_info["CommodityName"], " Id:", template_info["Id"], "插入成功")
+    except Exception as e:
+        logging.exception("任务执行失败: %s", str(e))
+    finally:
+        # 10毫秒后释放锁
+        time.sleep(0.01)
+        # 在finally块中释放锁，确保即使发生异常也能释放锁
+        lock.release()
 
-    # 请求URL
-    url = "https://api.youpin898.com/api/homepage/v2/detail/template/info"
-
-    # 发送POST请求
-    response = requests.post(url, headers=headers, data=json.dumps(data), timeout=5)
-
-    # 解析响应数据
-    response_data = json.loads(response.text)
-
-    # 提取饰品数据
-    template_info = response_data["Data"]["TemplateInfo"]
-    # template_info 为null返回
-    if not template_info:
-        print("饰品id：", template_id, "不存在")
-        cursor.close()
-        return
-
-    # 插入数据到数据库
-    sql_insert = "INSERT INTO youpin_template (Id,CommodityName, CommodityHashName, GroupHashName, IconUrl, TypeName, Exterior, Rarity, Quality) VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s)"
-    values = (template_info["Id"], template_info["CommodityName"], template_info["CommodityHashName"],
-              template_info["GroupHashName"], template_info["IconUrl"], template_info["TypeName"],
-              template_info["Exterior"], template_info["Rarity"], template_info["Quality"])
-    cursor.execute(sql_insert, values)
-    connection.commit()
-    cursor.close()
-    print("饰品：", template_info["CommodityName"], "插入成功")
 
 
 def getAllTemolate(pageIndex, pageSize):
@@ -141,23 +156,28 @@ def getAllTemolate(pageIndex, pageSize):
 
 
 def batchTemplate_FromID(start, end):
+    print("检查范围：", start, "-", end)
     connection = db_pool.get_connection()
-    #从start到end循环
-    for id in range(start, end):
-        inserTemplate_FromID(id, connection)
-    connection.close()
+    try:
+        # 从start到end循环
+        for id in range(start, end):
+            inserTemplate_FromID(id, connection)
+    except Exception as e:
+        print("任务执行失败:", str(e))
+    finally:
+        connection.close()
 
 
-# 跑完多跑几次，youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性
+
 if __name__ == "__main__":
     # 计算开始使用时间
-    type = 2 # 1:从指定ID开始爬(1-200000) 2:从第一页开始爬（1-100页，推荐用这个）
+    type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
     start = time.time()
-    executor = ThreadPoolExecutor(max_workers=20)  # 使用10个线程进行并发请求
+    executor = ThreadPoolExecutor(max_workers=10)  # 使用10个线程进行并发请求
     if type == 1:
-        for i in range(1, 11):
-            executor.submit(batchTemplate_FromID, (i - 1) * 20000, i * 20000)  # 提交任务给线程池并发执行
-            time.sleep(1)  # 等待一小段时间，避免请求过于频繁
+        for i in range(1, 150):
+            executor.submit(batchTemplate_FromID, (i - 1) * 1000, i * 1000)  # 提交任务给线程池并发执行
+            time.sleep(0.1)  # 等待一小段时间，避免请求过于频繁
     else:
         # 重复请求多次，保证数据的完整性
         for i in range(1, 101):
