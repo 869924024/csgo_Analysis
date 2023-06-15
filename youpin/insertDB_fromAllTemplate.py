@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断
 lock = threading.Lock()
 
-# 令牌列表
+# 令牌列表(越多令牌爬取得越快)
 tokens = [
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNWI1ODEyMWE5MDY0OGU0YTE5NDAxYzNiZjliNjU1NSIsIm5hbWVpZCI6IjM0MTM3ODciLCJJZCI6IjM0MTM3ODciLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxMzc4NyIsIk5hbWUiOiJZUDAwMDM0MTM3ODciLCJuYmYiOjE2ODY3OTM2NTksImV4cCI6MTY4NzY1NzY1OSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.QSOSxCYqduPOP2P94nVQG75dBwPeAWrGWKyjAsO-_1I',
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNTdmMjlkMWZiYmU0MjQ1OWFkYjA2NjMyMTQ2N2YwZCIsIm5hbWVpZCI6IjMzNjM4MjMiLCJJZCI6IjMzNjM4MjMiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzM2MzgyMyIsIk5hbWUiOiJZUDAwMDMzNjM4MjMiLCJuYmYiOjE2ODYwNjA0ODAsImV4cCI6MTY4NjkyNDQ4MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.Pn_xsEidIEa0ZxY1ZvHAGP76_8BVVRoWrcxXKxs2Sm4',
@@ -24,6 +24,19 @@ tokens = [
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNzAzNTA4YWE2ZTM0ZmIxODdiYzRkNGI0ZjU4NzI2ZSIsIm5hbWVpZCI6IjI2OTYzMjMiLCJJZCI6IjI2OTYzMjMiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMjY5NjMyMyIsIk5hbWUiOiJZUDAwMDI2OTYzMjMiLCJuYmYiOjE2ODY4MDE2MTgsImV4cCI6MTY4NzY2NTYxOCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.TVSIrH9R1vP_NzNBpwD_7M6nevInIQXQSi1H6BvQpt8',
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3OWYxODhmY2Q4Mjg0MmJmYjE4YTg5NGY5YTQ3NmQ5MSIsIm5hbWVpZCI6IjMxMTE1NjIiLCJJZCI6IjMxMTE1NjIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzExMTU2MiIsIk5hbWUiOiJZUDAwMDMxMTE1NjIiLCJuYmYiOjE2ODY4MDE2NTcsImV4cCI6MTY4NzY2NTY1NywiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.HYzJaahkIGdzUNAI5K4mcLgmFzjI_5-f6Md685jYVMo',
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjkwN2ExMTUyOWU0YWUzOWY4YTVkOWEwMTdkZWMwNiIsIm5hbWVpZCI6IjI2OTYxODgiLCJJZCI6IjI2OTYxODgiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMjY5NjE4OCIsIk5hbWUiOiJZUDAwMDI2OTYxODgiLCJuYmYiOjE2ODY4MDE4NTAsImV4cCI6MTY4NzY2NTg1MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.R44bICqWxofOe1CmZfuXMMfhhGeNCxFVeO48HVYBsms',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjkwN2ExMTUyOWU0YWUzOWY4YTVkOWEwMTdkZWMwNiIsIm5hbWVpZCI6IjI2OTYxODgiLCJJZCI6IjI2OTYxODgiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMjY5NjE4OCIsIk5hbWUiOiJZUDAwMDI2OTYxODgiLCJuYmYiOjE2ODY4MDE4NTAsImV4cCI6MTY4NzY2NTg1MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.R44bICqWxofOe1CmZfuXMMfhhGeNCxFVeO48HVYBsms',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5YjU5YTFlOTVjNjA0NGM5OGYwNWMyYzQxMTUwMDM4ZiIsIm5hbWVpZCI6IjM0MTQ4NDEiLCJJZCI6IjM0MTQ4NDEiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNDg0MSIsIk5hbWUiOiJZUDAwMDM0MTQ4NDEiLCJuYmYiOjE2ODY4MDc1ODcsImV4cCI6MTY4NzY3MTU4NywiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.W85UTJ473XHaRXX9qRdLjqOeHSmSa-haOx5xYw-BNGw',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZWE5MmI3N2Q0NjQ0ZTg0OTRlMGJiMGIyMmRhNDE3OCIsIm5hbWVpZCI6IjM0MTQ5MjYiLCJJZCI6IjM0MTQ5MjYiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNDkyNiIsIk5hbWUiOiJZUDAwMDM0MTQ5MjYiLCJuYmYiOjE2ODY4MDg0NzMsImV4cCI6MTY4NzY3MjQ3MywiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.w-lK0ryw5fux_GvO4u4Q0GznYBWzhyPGa8Hm0BvarJ4',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkODMxOWRhNjg1ZjA0ZTMyOTlhMGFkZjYwMTU1OWVmZCIsIm5hbWVpZCI6IjM0MTQ5MzIiLCJJZCI6IjM0MTQ5MzIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNDkzMiIsIk5hbWUiOiJZUDAwMDM0MTQ5MzIiLCJuYmYiOjE2ODY4MDg1NTgsImV4cCI6MTY4NzY3MjU1OCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.qGFBV3Eu4lSDBhaYPkaOKgNsrT7R9O6QS01TEmjmx-s',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiYzY5NmMzNzI4YjI0MGM1ODA5NzE4NGI3ODIxYjdiYSIsIm5hbWVpZCI6IjM0MTQ5NTQiLCJJZCI6IjM0MTQ5NTQiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNDk1NCIsIk5hbWUiOiJZUDAwMDM0MTQ5NTQiLCJuYmYiOjE2ODY4MDg3MzEsImV4cCI6MTY4NzY3MjczMSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.ViYhQXS0m97XOcmCrxA8WCisk_ixtfHjmlc4Q0zSsHk',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMTQ2MWI5MGI5OGU0MGQzODc2NmM3ZDY0Yzg0Yzg0NiIsIm5hbWVpZCI6IjMyMzU0NzUiLCJJZCI6IjMyMzU0NzUiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzIzNTQ3NSIsIk5hbWUiOiJZUDAwMDMyMzU0NzUiLCJuYmYiOjE2ODY4MDg4NjcsImV4cCI6MTY4NzY3Mjg2NywiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.gWT8hBMPMBAhoSZaor23h-IChds8S0U_9KD_juQornA',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2NzAxNjRlMzc0ODU0OWU0OTVjMTBhYTM0M2UzMWEyZiIsIm5hbWVpZCI6IjM0MTQ5ODYiLCJJZCI6IjM0MTQ5ODYiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNDk4NiIsIk5hbWUiOiJZUDAwMDM0MTQ5ODYiLCJuYmYiOjE2ODY4MDkwMzEsImV4cCI6MTY4NzY3MzAzMSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.SFzsA_kS4bJJRabq4wgV7dadZPXQjs-BOVTQentVFqM',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyYzIxYjc2YjhlNzM0MjY1YTgyYzJmZDBlYWI2OTVjMSIsIm5hbWVpZCI6IjMwMjIwOTEiLCJJZCI6IjMwMjIwOTEiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzAyMjA5MSIsIk5hbWUiOiJZUDAwMDMwMjIwOTEiLCJuYmYiOjE2ODY4MDkxMjMsImV4cCI6MTY4NzY3MzEyMywiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.C3Vo-CH8ng2Ery4TkM6daJjk-x-FkHBeq7IpVFrsEKY',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjM2ZmNjJlYjYzM2E0MmY0OGU4Zjg4NTk0YjgwM2U5YiIsIm5hbWVpZCI6IjMzMDY2MzIiLCJJZCI6IjMzMDY2MzIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzMwNjYzMiIsIk5hbWUiOiJZUDAwMDMzMDY2MzIiLCJuYmYiOjE2ODY4MDkzMzksImV4cCI6MTY4NzY3MzMzOSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.FKNvo3mv5A8-C45kiZvKiLJT_N3avlPbuAhzHd63GY4',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhOWFhZjdlYjI0MmY0NmRlYjU4NDIyNjZhMzRmNmYwOCIsIm5hbWVpZCI6IjM0MTUwMjYiLCJJZCI6IjM0MTUwMjYiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTAyNiIsIk5hbWUiOiJZUDAwMDM0MTUwMjYiLCJuYmYiOjE2ODY4MDk2NTgsImV4cCI6MTY4NzY3MzY1OCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.46Ww7fXaYa3O2Xi9hFDE29Ae6N97IGZxhdyP1qVbqbo',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkZTRhNzIyOTYxNzc0ZTUwODk2ZGE3YWQ5ZDhiYTIwZCIsIm5hbWVpZCI6IjMzMDc0MDIiLCJJZCI6IjMzMDc0MDIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzMwNzQwMiIsIk5hbWUiOiJZUDAwMDMzMDc0MDIiLCJuYmYiOjE2ODY4MDk3MTksImV4cCI6MTY4NzY3MzcxOSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.NIfN3oku15fOrJc_TktAeIWzNJaoZ7XPdOaflFcVodg',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMzIzZDk3NTcyZjM0N2ZlOTVkMmVkYTdmOTE2YjMyOCIsIm5hbWVpZCI6IjM0MTUwMzgiLCJJZCI6IjM0MTUwMzgiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTAzOCIsIk5hbWUiOiJZUDAwMDM0MTUwMzgiLCJuYmYiOjE2ODY4MDk3NzAsImV4cCI6MTY4NzY3Mzc3MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.3menpqZTZevReeFMP57QRAYDzf6fvriJ1NxobTVV7wE',
+    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZjIyZDllYmNiOTU0MjhmOWQzMzg2MGFlZmY1YjJhYSIsIm5hbWVpZCI6IjM0MTUwNDIiLCJJZCI6IjM0MTUwNDIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTA0MiIsIk5hbWUiOiJZUDAwMDM0MTUwNDIiLCJuYmYiOjE2ODY4MDk4MDksImV4cCI6MTY4NzY3MzgwOSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.NSq-2vcBjRPnnB39Myn0R0C4CVJKi3p_8iZweMHzZDE',
     # 添加更多令牌
 ]
 
@@ -35,7 +48,7 @@ db_config = {
     "database": "csgo",
     "charset": "utf8",
     "pool_name": "csgo_pool",
-    "pool_size": 25,
+    "pool_size": len(tokens)+1,
 }
 
 # 请求头
@@ -87,7 +100,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
         cursor.execute(sql_select, (template_id,))
         result = cursor.fetchone()
         if result:
-            #print("饰品id：", result[0], "饰品名:", result[1], "数据已存在，不进行插入操作")
+            # print("饰品id：", result[0], "饰品名:", result[1], "数据已存在，不进行插入操作")
             cursor.close()
             return
 
@@ -104,7 +117,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
         template_info = response_data["Data"]["TemplateInfo"]
         # template_info 为null返回
         if not template_info:
-            #print("饰品id：", template_id, "不存在")
+            # print("饰品id：", template_id, "不存在")
             cursor.close()
             return
 
@@ -195,11 +208,13 @@ if __name__ == "__main__":
     # 计算开始使用时间
     type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
     start = time.time()
-    executor = ThreadPoolExecutor(max_workers=len(tokens))  # 使用10个线程进行并发请求
+    executor = ThreadPoolExecutor(max_workers=len(tokens))  # 使用多线程进行并发请求
+    total = 150000  # id总数
     if type == 1:
-        for i in range(0, 150):
+        rangIndex = total / len(tokens)
+        for i in range(0, len(tokens) + 1):
             thread_token = tokens[i % len(tokens)]  # 为每个线程选择一个令牌
-            executor.submit(batchTemplate_FromID, i * 1000, (i + 1) * 1000, thread_token)  # 提交任务给线程池并发执行
+            executor.submit(batchTemplate_FromID, i * rangIndex, (i + 1) * rangIndex, thread_token)  # 提交任务给线程池并发执行
             time.sleep(0.1)  # 等待一小段时间，避免请求过于频繁
     else:
         # 重复请求多次，保证数据的完整性
