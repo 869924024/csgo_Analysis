@@ -1,15 +1,9 @@
-import copy
-import sys
-import threading
-import time
-import logging
-import requests
-import json
+# @Time : 2023/6/16 13:05
+# @Author : douyacai
+# @Version：V 0.1
+# @File : global_var.py.py
+# @desc : 全局配置文件
 import mysql.connector
-from concurrent.futures import ThreadPoolExecutor
-
-# 创建锁对象 间隔一定毫秒一次请求，不然会被熔断
-lock = threading.Lock()
 
 # 令牌列表(越多令牌爬取得越快)
 tokens = [
@@ -40,6 +34,7 @@ tokens = [
     # 添加更多令牌
 ]
 
+
 # 数据库连接配置
 db_config = {
     "host": "www.douyacai.work",
@@ -51,12 +46,32 @@ db_config = {
     "pool_size": len(tokens)+1,
 }
 
+
+# 数据库连接池
+def get_db_pool():
+    #若存在链接池则直接返回
+    if hasattr(get_db_pool, "pool"):
+        return get_db_pool.pool
+    #不存在则创建
+    else:
+        get_db_pool.pool = mysql.connector.pooling.MySQLConnectionPool(**db_config)
+        return get_db_pool.pool
+    #获取链接
+def get_db_connection():
+    return get_db_pool().get_connection()
+
+# 连接池关闭
+def close_db_pool():
+    if hasattr(get_db_pool, "pool"):
+        get_db_pool.pool.close()
+        delattr(get_db_pool, "pool")
+
+
 # 请求头
-headers = {
+youpinHeaders = {
     "content-type": "application/json",
     "apptype": "3",
     "version": "5.1.1",
-    "authorization": "Bearer ",
     "content-encoding": "gzip",
     "devicesysversion": "13.6",
     "app-version": "5.1.1",
@@ -65,171 +80,19 @@ headers = {
     "accept-encoding": "gzip",
     "accept-language": "zh-Hans;q=1.0, en;q=0.9",
     "platform": "ios",
-    "devicetoken": "17A06643-B466-45ED-8495-15D11313572B",
-    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNTdmMjlkMWZiYmU0MjQ1OWFkYjA2NjMyMTQ2N2YwZCIsIm5hbWVpZCI6IjMzNjM4MjMiLCJJZCI6IjMzNjM4MjMiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzM2MzgyMyIsIk5hbWUiOiJZUDAwMDMzNjM4MjMiLCJuYmYiOjE2ODYwNjA0ODAsImV4cCI6MTY4NjkyNDQ4MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.Pn_xsEidIEa0ZxY1ZvHAGP76_8BVVRoWrcxXKxs2Sm4',
-    "content-length": "168",
     "user-agent": "",
 }
-# # 连接数据库
-# db = mysql.connector.connect(**db_config)
-# cursor = db.cursor()
-
-# 创建连接池
-db_pool = mysql.connector.pooling.MySQLConnectionPool(**db_config)
 
 
-def inserTemplate_FromID(template_id, connection, local_headers):
-    try:
-        # 获取锁
-        # lock.acquire()
-        # 请求数据
-        data = {
-            "appVersion": "5.1.1",
-            "gameId": 730,
-            "SessionId": "17A06643-B466-45ED-8495-15D11313572B",
-            "AppType": "3",
-            "templateId": template_id,
-            "Platform": "ios",
-            "Version": "5.1.1",
-            "listType": 15,
-        }
 
-        # 判断数据是否已存在
-        sql_select = "SELECT * FROM youpin_template WHERE id = %s"
-        cursor = connection.cursor()
-        cursor.execute(sql_select, (template_id,))
-        result = cursor.fetchone()
-        if result:
-            # print("饰品id：", result[0], "饰品名:", result[1], "数据已存在，不进行插入操作")
-            cursor.close()
-            return
-
-        # 请求URL
-        url = "https://api.youpin898.com/api/homepage/v2/detail/template/info"
-
-        # 发送POST请求
-        response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=5)
-
-        # 解析响应数据
-        response_data = json.loads(response.text)
-
-        # 提取饰品数据
-        template_info = response_data["Data"]["TemplateInfo"]
-        # template_info 为null返回
-        if not template_info:
-            # print("饰品id：", template_id, "不存在")
-            cursor.close()
-            return
-
-        # 插入数据到数据库
-        sql_insert = "INSERT INTO youpin_template (Id,CommodityName, CommodityHashName, GroupHashName, IconUrl, TypeName, Exterior, Rarity, Quality) VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s)"
-        values = (template_info["Id"], template_info["CommodityName"], template_info["CommodityHashName"],
-                  template_info["GroupHashName"], template_info["IconUrl"], template_info["TypeName"],
-                  template_info["Exterior"], template_info["Rarity"], template_info["Quality"])
-        cursor.execute(sql_insert, values)
-        connection.commit()
-        cursor.close()
-        print("饰品：", template_info["CommodityName"], " Id:", template_info["Id"], "插入成功")
-    except Exception as e:
-        logging.exception("任务执行失败: %s", str(e))
-    # finally:
-    # 在finally块中释放锁，确保即使发生异常也能释放锁
-    # lock.release()
+#  接码平台get请求头
+platformHeaders = {
+    "content-type": "application/json",
+    "Host": "ysqdouyin.online",
+    "Accept-Encoding": "gzip, deflate, br",
+    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_6 like Mac OS X) AppleWebKit/605.1.15 "
+                  "Accept: */*",
+    "Connection": "keep-alive"
+}
 
 
-def getAllTemolate(pageIndex, pageSize, thread_token):
-    # 请求数据
-    data = {
-        "Platform": "ios",
-        "maxLongPrice": "",
-        "maxPrice": "",
-        "Version": "5.1.1",
-        "keyWords": "",
-        "gameId": 730,
-        "sortType": 0,
-        "AppType": "3",
-        "SessionId": "17A06643-B466-45ED-8495-15D11313572B",
-        "listSortType": 0,
-        "pageIndex": pageIndex,
-        "pageSize": pageSize,
-        "filterMap": {
-            "Rarity": [],
-            "Exterior": [],
-            "Type": [],
-            "Quality": []
-        },
-        "minLongPrice": "",
-        "minPrice": "",
-        "maxDepositPrice": "",
-        "minDepositPrice": "",
-        "listType": 10
-    }
-    # 创建 headers 的副本
-    local_headers = copy.deepcopy(headers)
-    # 每个线程单独token
-    local_headers['authorization'] = thread_token
-
-    # 请求URL
-    url = "https://api.youpin898.com/api/homepage/new/es/template/GetCsGoPagedList"
-
-    # 发送POST请求
-    response = requests.post(url, headers=local_headers, data=json.dumps(data))
-    # 解析响应数据
-    response_data = json.loads(response.text)
-    data_list = response_data["Data"]
-    print("第" + pageIndex + "页", str(data_list))
-    connection = db_pool.get_connection()
-    for data in data_list:
-        id = data["Id"]
-        inserTemplate_FromID(id, connection, local_headers)
-    connection.close()
-    print("第" + pageIndex + "页数据插入完成")
-
-
-def batchTemplate_FromID(start, end, thread_token):
-    print("检查范围：", start, "-", end)
-    connection = db_pool.get_connection()
-    # 创建 headers 的副本
-    local_headers = copy.deepcopy(headers)
-    # 每个线程单独token
-    local_headers['authorization'] = thread_token
-    try:
-        # 从start到end循环
-        for id in range(start, end):
-            inserTemplate_FromID(id, connection, local_headers)
-    except Exception as e:
-        print("任务执行失败:", str(e))
-    finally:
-        connection.close()
-    print("完成范围扫描：", start, "-", end)
-
-
-if __name__ == "__main__":
-    # 计算开始使用时间
-    type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
-    start = time.time()
-    executor = ThreadPoolExecutor(max_workers=len(tokens))  # 使用多线程进行并发请求
-    total = 150000  # id总数
-    if type == 1:
-        rangIndex = total / len(tokens)
-        for i in range(0, len(tokens) + 1):
-            thread_token = tokens[i % len(tokens)]  # 为每个线程选择一个令牌
-            executor.submit(batchTemplate_FromID, i * rangIndex, (i + 1) * rangIndex, thread_token)  # 提交任务给线程池并发执行
-            time.sleep(0.1)  # 等待一小段时间，避免请求过于频繁
-    else:
-        # 重复请求多次，保证数据的完整性
-        for i in range(1, 101):
-            for j in range(1, 101):  # 获取前100页数据
-                thread_token = tokens[j % len(tokens)]  # 为每个线程选择一个令牌
-                executor.submit(getAllTemolate, str(j), 100, thread_token)  # 提交任务给线程池并发执行
-                time.sleep(0.5)  # 等待一小段时间，避免请求过于频繁
-    executor.shutdown(wait=True)  # 等待所有任务完成
-    # 计算结束使用时间
-    end = time.time()
-    print("所有数据插入完成", "总耗时：", end - start, "秒")
-    try:
-        # 关闭连接池
-        db_pool.close()
-    except Exception as e:
-        print("关闭连接池时出现异常:", str(e), "强制退出程序")
-        sys.exit(1)  # 退出程序或进行其他错误处理
