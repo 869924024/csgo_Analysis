@@ -90,7 +90,7 @@ def youpinGetUserInfo(token):
     print("用户名：", data["NickName"], "Mobile:", data["Mobile"])
     if data["Mobile"]:
             # 连接数据库
-        connection = global_var.get_one_connection()
+        connection = global_var.get_db_connection()
         cursor = connection.cursor()
         sqlselect = "select * from youpin_phone_token where token=%s"
         cursor.execute(sqlselect, (token,))
@@ -100,10 +100,10 @@ def youpinGetUserInfo(token):
             cursor.execute(sqlupdate, (data["Mobile"], token))
             connection.commit()
             cursor.close()
+            print("更新手机号成功mobile:", data["Mobile"])
         return data["Mobile"]
 
 
 
 if __name__ == '__main__':
     youpinGetUserInfo("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMzIzZDk3NTcyZjM0N2ZlOTVkMmVkYTdmOTE2YjMyOCIsIm5hbWVpZCI6IjM0MTUwMzgiLCJJZCI6IjM0MTUwMzgiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTAzOCIsIk5hbWUiOiJZUDAwMDM0MTUwMzgiLCJuYmYiOjE2ODY4MDk3NzAsImV4cCI6MTY4NzY3Mzc3MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.3menpqZTZevReeFMP57QRAYDzf6fvriJ1NxobTVV7wE")
-    global_var.close_db_pool()  # 关闭数据库连接池

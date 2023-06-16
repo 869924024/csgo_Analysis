@@ -191,4 +191,3 @@ if __name__ == "__main__":
     # 计算结束使用时间
     end = time.time()
     print("所有数据插入完成", "总耗时：", end - start, "秒")
-    global_var.close_db_pool()  # 关闭数据库连接池

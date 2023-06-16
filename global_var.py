@@ -43,9 +43,8 @@ db_config = {
     "database": "csgo",
     "charset": "utf8",
     "pool_name": "csgo_pool",
-    "pool_size": len(tokens)+1,
+    "pool_size": 5,
 }
-
 
 # 数据库连接池
 def get_db_pool():
@@ -56,7 +55,8 @@ def get_db_pool():
     else:
         get_db_pool.pool = mysql.connector.pooling.MySQLConnectionPool(**db_config)
         return get_db_pool.pool
-    #获取链接
+
+#获取链接
 def get_db_connection():
     return get_db_pool().get_connection()
 
