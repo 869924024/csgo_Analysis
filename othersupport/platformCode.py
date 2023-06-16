@@ -1,16 +1,14 @@
+# @Time : 2023/6/16 14:47
+# @Author : douyacai
+# @Version：V 0.1
+# @File : platformCode.py
+# @desc : 接码平台Api
+
 import json
 import re
 import requests
-import global_var
-
-
-# 接码平台token
-platform_token = "hjj869924024-3023061510023121399162938"
-# 接码平台关键词（短信接码关键件，悠悠有品-悠悠优品，buff-网易）
-platform_keyword = "悠悠优品"
-# platform_keyword = "网易"
-
-
+from global_var import global_config
+global_config = global_config()
 def getPlatformMobile():
     """
     Parameters
@@ -22,8 +20,8 @@ def getPlatformMobile():
     :Describe：获取接码平台手机号
     """
 
-    url = "http://ysqdouyin.online/open-api/getPhone?token=%s&proj=%s" % (platform_token, platform_keyword)
-    response = requests.get(url, headers=global_var.platformHeaders, timeout=5)
+    url = "http://ysqdouyin.online/open-api/getPhone?token=%s&proj=%s" % (global_config.platform_token, global_config.platform_keyword)
+    response = requests.get(url, headers=global_config.platformHeaders, timeout=5)
     response_data = json.loads(response.text)
     if not response_data["data"]:
         print("接码平台无手机号")
@@ -31,7 +29,7 @@ def getPlatformMobile():
     return response_data["data"]
 
 
-def getpaltformMsg(mobile):
+def getPaltformMsg(mobile):
     """
     Parameters
     mobile：手机号
@@ -42,11 +40,10 @@ def getpaltformMsg(mobile):
     :Create:  2023/6/16 00:45
     :Describe：
     """
-    platform_keyword = "悠悠有品"
     url = "http://ysqdouyin.online/open-api/getMsg?token=%s&proj=%s&phoneNo=%s" % (
-        platform_token, platform_keyword, mobile)
+        global_config.platform_token, global_config.platform_keyword, mobile)
     print(url)
-    response = requests.get(url, headers=global_var.platformHeaders, timeout=10)
+    response = requests.get(url, headers=global_config.platformHeaders, timeout=10)
     response_data = json.loads(response.text)
     if response_data["code"] == 200:
         print("接码平台获取验证码成功mobile:", mobile, "验证码：", response_data["data"])
@@ -56,3 +53,23 @@ def getpaltformMsg(mobile):
                 code = code_match.group()
                 return code
     return
+
+
+
+if __name__ == '__main__':
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/16 17:33
+    :Describe：批量接码操作
+    """
+    for i in range(10):
+        mobile = getPlatformMobile()
+        if mobile:
+            code = getPaltformMsg(mobile)
+            if code:
+                print("接码平台获取验证码成功mobile:", mobile, "验证码：", code)
+                break

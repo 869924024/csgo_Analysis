@@ -3,9 +3,9 @@ import time
 import logging
 import requests
 import json
-import global_var
+from global_var import global_config
 from concurrent.futures import ThreadPoolExecutor
-
+global_config = global_config()
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断(不用锁，改成不同账号请求不会熔断)
 # lock = threading.Lock()
 
@@ -121,7 +121,7 @@ def getAllTemolate(pageIndex, pageSize, thread_token):
         "listType": 10
     }
     # 创建 headers 的副本
-    local_headers = copy.deepcopy(global_var.youpinHeaders)
+    local_headers = copy.deepcopy(global_config.youpinHeaders)
     # 每个线程单独token
     local_headers['authorization'] = thread_token
 
@@ -134,10 +134,11 @@ def getAllTemolate(pageIndex, pageSize, thread_token):
     response_data = json.loads(response.text)
     data_list = response_data["Data"]
     print("第" + pageIndex + "页", str(data_list))
-    connection = global_var.get_db_connection()
+    connection = global_config.get_db_connection()
     for data in data_list:
         id = data["Id"]
         inserTemplate_FromID(id, connection, local_headers)
+    global_config.close_db_connection(connection)
     print("第" + pageIndex + "页数据插入完成")
 
 
@@ -153,9 +154,9 @@ def batchTemplate_FromID(start, end, thread_token):
     """
 
     print("检查范围：", start, "-", end, " 使用token:" , thread_token)
-    connection = global_var.get_db_connection()
+    connection = global_config.get_db_connection()
     # 创建 headers 的副本
-    local_headers = copy.deepcopy(global_var.youpinHeaders)
+    local_headers = copy.deepcopy(global_config.youpinHeaders)
     # 每个线程单独token
     local_headers['authorization'] = thread_token
     try:
@@ -164,6 +165,8 @@ def batchTemplate_FromID(start, end, thread_token):
             inserTemplate_FromID(id, connection, local_headers)
     except Exception as e:
         print("任务执行失败:", str(e))
+    finally:
+        global_config.close_db_connection(connection)
     print("完成范围扫描：", start, "-", end, " 使用token:" , thread_token)
 
 
@@ -171,12 +174,12 @@ if __name__ == "__main__":
     # 计算开始使用时间
     type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
     start = time.time()
-    executor = ThreadPoolExecutor(max_workers=len(global_var.tokens))  # 使用多线程进行并发请求
+    executor = ThreadPoolExecutor(max_workers=len(global_config.tokens))  # 使用多线程进行并发请求
     total = 150000  # id总数
     if type == 1:
-        rangIndex = total / len(global_var.tokens)
-        for i in range(0, len(global_var.tokens) + 1):
-            thread_token = global_var.tokens[i % len(global_var.tokens)]  # 为每个线程选择一个令牌
+        rangIndex = total / len(global_config.tokens)
+        for i in range(0, len(global_config.tokens) + 1):
+            thread_token = global_config.tokens[i % len(global_config.tokens)]  # 为每个线程选择一个令牌
             executor.submit(batchTemplate_FromID, int(i * rangIndex), int((i + 1) * rangIndex),
                             thread_token)  # 提交任务给线程池并发执行
             time.sleep(0.1)  # 等待一小段时间，避免请求过于频繁
@@ -184,7 +187,7 @@ if __name__ == "__main__":
         # 重复请求多次，保证数据的完整性
         for i in range(1, 101):
             for j in range(1, 101):  # 获取前100页数据
-                thread_token = global_var.tokens[j % len(global_var.tokens)]  # 为每个线程选择一个令牌
+                thread_token = global_config.tokens[j % len(global_config.tokens)]  # 为每个线程选择一个令牌
                 executor.submit(getAllTemolate, str(j), 100, thread_token)  # 提交任务给线程池并发执行
                 time.sleep(0.5)  # 等待一小段时间，避免请求过于频繁
     executor.shutdown(wait=True)  # 等待所有任务完成

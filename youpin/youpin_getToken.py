@@ -3,10 +3,10 @@
 # @Version：V 0.1
 # @File : youpin_getToken.py
 # @desc : 悠悠有品获取token Api
-import global_var
+from global_var import global_config
 import requests
 import json
-
+global_config = global_config()
 
 def youpinSendCode(mobile):
     """
@@ -25,7 +25,7 @@ def youpinSendCode(mobile):
         "SessionId": "a2238f5d-9530-4d67-abc2-b88066f9e580"
     }
     # 发送POST请求
-    response = requests.post(url, headers=global_var.youpinHeaders, data=json.dumps(data))
+    response = requests.post(url, headers=global_config.youpinHeaders, data=json.dumps(data))
     response_data = json.loads(response.text)
     if response_data["Msg"] == "发送成功":
         print("验证码发送成功mobile:", mobile)
@@ -53,7 +53,7 @@ def youpinLogin(mobile, code):
         "TenDay": 1
     }
 
-    response = requests.post(url, headers=global_var.youpinHeaders, data=json.dumps(data))
+    response = requests.post(url, headers=global_config.youpinHeaders, data=json.dumps(data))
     response_data = json.loads(response.text)
     if response_data["Msg"] == "登录成功":
         print("登陆成功token: Bearer", response_data["Data"]["Token"])
@@ -61,8 +61,7 @@ def youpinLogin(mobile, code):
     return
 
 
-
-def youpinGetUserInfo(token):
+def youpinGetUserInfo(token, connection):
     """
     Parameters
     token：用户token
@@ -76,26 +75,31 @@ def youpinGetUserInfo(token):
     """
 
     # 每个线程单独token
-    global_var.youpinHeaders['authorization'] = token
+    global_config.youpinHeaders['authorization'] = token
 
     # 请求URL
     url = "https://api.youpin898.com/api/user/Account/GetUserInfo"
 
     # 发送POST请求
-    response = requests.get(url, headers=global_var.youpinHeaders, timeout=5)
+    response = requests.get(url, headers=global_config.youpinHeaders, timeout=5)
 
     # 解析响应数据
     response_data = json.loads(response.text)
+    # 若response_data存在字段Data则说明token有效
+    if "Data" not in response_data :
+        print("token失效token:", token)
+        deleteToken(token)
+        return
+
     data = response_data["Data"]
     print("用户名：", data["NickName"], "Mobile:", data["Mobile"])
     if data["Mobile"]:
-            # 连接数据库
-        connection = global_var.get_db_connection()
+        # 连接数据库
         cursor = connection.cursor()
         sqlselect = "select * from youpin_phone_token where token=%s"
         cursor.execute(sqlselect, (token,))
         result = cursor.fetchone()
-        if not result[1]:
+        if result and not result[1]:
             sqlupdate = "update youpin_phone_token set mobile=%s where token=%s"
             cursor.execute(sqlupdate, (data["Mobile"], token))
             connection.commit()
@@ -104,6 +108,48 @@ def youpinGetUserInfo(token):
         return data["Mobile"]
 
 
+def deleteToken(token):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/16 18:10
+    :Describe：删除过期的token
+    """
+    connection = global_config.get_db_connection()
+    cursor = connection.cursor()
+    sqldelete = "delete from youpin_phone_token where token=%s"
+    cursor.execute(sqldelete, (token,))
+    connection.commit()
+    cursor.close()
+    print("删除过期token成功token:", token)
+
+
+def checkDBToken(tokens):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/16 17:37
+    :Describe：批量获取数据库已存在的token并校验是否过期(由于公共类如果使用会发生循环依赖，所以进行修改)
+    """
+    connection = global_config.get_db_connection()
+    print("开始检查数据库所有token是否过期")
+    new_tokens = []
+    for index in tokens:
+        mobile = youpinGetUserInfo(index, connection)
+        if not mobile and mobile is None:
+            continue
+        new_tokens.append(index)
+    tokens = new_tokens
+    print("检查数据库所有token是否过期结束")
+    global_config.close_db_connection(connection)
+    return tokens
+
 
 if __name__ == '__main__':
-    youpinGetUserInfo("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMzIzZDk3NTcyZjM0N2ZlOTVkMmVkYTdmOTE2YjMyOCIsIm5hbWVpZCI6IjM0MTUwMzgiLCJJZCI6IjM0MTUwMzgiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTAzOCIsIk5hbWUiOiJZUDAwMDM0MTUwMzgiLCJuYmYiOjE2ODY4MDk3NzAsImV4cCI6MTY4NzY3Mzc3MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.3menpqZTZevReeFMP57QRAYDzf6fvriJ1NxobTVV7wE")
+    checkDBToken(global_config.tokens)
