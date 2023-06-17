@@ -26,6 +26,7 @@ def getPlatformMobile():
     if not response_data["data"]:
         print("接码平台无手机号")
         return
+    print("接码平台获取手机号成功mobile:", response_data["data"])
     return response_data["data"]
 
 
@@ -55,21 +56,3 @@ def getPaltformMsg(mobile):
     return
 
 
-
-if __name__ == '__main__':
-    """
-    Parameters
-    ----------
-    Returns
-    -------
-    :Author:  douyacai
-    :Create:  2023/6/16 17:33
-    :Describe：批量接码操作
-    """
-    for i in range(10):
-        mobile = getPlatformMobile()
-        if mobile:
-            code = getPaltformMsg(mobile)
-            if code:
-                print("接码平台获取验证码成功mobile:", mobile, "验证码：", code)
-                break

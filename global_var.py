@@ -77,8 +77,8 @@ class global_config:
 
     # 接码平台token
     platform_token = "hjj869924024-3023061510023121399162938"
-    # 接码平台关键词（短信接码关键件，悠悠有品-悠悠优品，buff-网易）
-    platform_keyword = "悠悠优品"
+    # 接码平台关键词（短信接码关键件，悠悠有品-悠悠有品，buff-网易）
+    platform_keyword = "悠悠有品"
     # platform_keyword = "网易"
 
     '''

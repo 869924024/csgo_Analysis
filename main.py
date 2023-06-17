@@ -10,4 +10,4 @@ import global_var
 from othersupport import *
 
 if __name__ == '__main__':
-    youpin_template.batchTemplate_FromPage()
+    youpin_getToken.insertTokenToDB(10)
