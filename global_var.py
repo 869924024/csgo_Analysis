@@ -3,6 +3,8 @@
 # @Version：V 0.1
 # @File : global_var.py.py
 # @desc : 全局配置类
+import os
+
 import mysql.connector
 
 
@@ -92,7 +94,7 @@ class global_config:
 
     #日志配置
     log_config = {
-        "filename": "../log/",
+        "filename": "/Users/huangjiajia/project/python/csgo_Analysis/log/", #日志输出路径，需要对应修改
         "level": "DEBUG",
         "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
         "datefmt": "%Y-%m-%d %H:%M:%S",

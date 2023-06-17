@@ -6,15 +6,14 @@
 from elasticsearch import Elasticsearch
 from global_var import global_config
 import uuid
-import logging
-import datetime
-import os
+from log_uils import logger
+import log_uils
 
 global_config = global_config()
 
 
-
 def insert_data_to_es(index_name, data):
+    log_uils.refresh_logging()
     try:
         # 创建Elasticsearch实例
         es = Elasticsearch(
@@ -28,13 +27,10 @@ def insert_data_to_es(index_name, data):
         # 插入数据
         es.index(index=index_name, id=document_id, body=data)
         # 日志记录成功信息
-        logging.info(
+        logger.info(
             f"Elastic Search Data inserted successfully. Index: {index_name}, Document ID: {document_id},Data: {data}")
     except Exception as e:
-
-        # 异常处理
-        logging.error(f"Elastic Search Failed to insert data. Error: {str(e)}")
-
+        logger.error(f"Elastic Search Failed to insert data. Error: {str(e)}")
 
 data = {
     "minReferencePrice": 35449,
@@ -60,3 +56,4 @@ index_name = "youpin_commodity_2023.6.23"
 
 if __name__ == '__main__':
     insert_data_to_es(index_name, data)
+
