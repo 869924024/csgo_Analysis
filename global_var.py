@@ -92,7 +92,7 @@ class global_config:
 
     #日志配置
     log_config = {
-        "filename": "/",
+        "filename": "../log/",
         "level": "DEBUG",
         "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
         "datefmt": "%Y-%m-%d %H:%M:%S",
