@@ -170,7 +170,16 @@ def batchTemplate_FromID(start, end, thread_token):
     print("完成范围扫描：", start, "-", end, " 使用token:" , thread_token)
 
 
-if __name__ == "__main__":
+def batchTemplate_FromPage():
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/17 14:34
+    :Describe：批量爬取饰品模版
+    """
     # 计算开始使用时间
     type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
     start = time.time()
