@@ -7,7 +7,8 @@
 from youpin import youpin_template
 from youpin import youpin_getToken
 import global_var
-from othersupport import *
+from platform import *
 
 if __name__ == '__main__':
-    youpin_getToken.insertTokenToDB(10)
+    # 接码平台获取token插入数据库
+     youpin_getToken.insertTokenToDB(10)

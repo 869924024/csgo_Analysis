@@ -81,6 +81,23 @@ class global_config:
     platform_keyword = "悠悠有品"
     # platform_keyword = "网易"
 
+
+    # es配置
+    es_config = {
+        "host": "www.douyacai.work",
+        "port": 9200,
+        "username": "elastic",
+        "password": "hjj2819597",
+    }
+
+    #日志配置
+    log_config = {
+        "filename": "/",
+        "level": "DEBUG",
+        "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
+        "datefmt": "%Y-%m-%d %H:%M:%S",
+    }
+
     '''
     ========================================================================================================================
     公共配置 ☝️

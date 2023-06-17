@@ -8,7 +8,7 @@ import time
 from global_var import global_config
 import requests
 import json
-from othersupport import platformCode
+from platform import platformCode
 
 global_config = global_config()
 
