@@ -11,8 +11,9 @@ global_config = global_config()
 
 current_date = datetime.date.today().strftime("%Y-%m-%d")
 log_filename = os.path.join(global_config.log_config["filename"], f"ElasticSearch_Python_{current_date}.log")
-if not os.path.exists(global_config.log_config["filename"]):
-    os.makedirs(global_config.log_config["filename"])
+log_directory = os.path.dirname(log_filename)
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
 
 # 创建根日志记录器
 logger = logging.getLogger()

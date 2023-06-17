@@ -15,22 +15,23 @@ global_config = global_config()
 def insert_data_to_es(index_name, data):
     log_uils.refresh_logging()
     try:
+        es_url = "{}:{}".format(global_config.es_config["host"], global_config.es_config["port"])
         # 创建Elasticsearch实例
         es = Elasticsearch(
-            hosts=[global_config.esHost],
-            http_auth=(global_config.username, global_config.password)
+            hosts=[es_url],
+            basic_auth=(global_config.es_config["username"], global_config.es_config["password"])
         )
 
         # 生成唯一的document_id
-        document_id = str(uuid.uuid4())
+        document_id = str(uuid.uuid1())
 
         # 插入数据
-        es.index(index=index_name, id=document_id, body=data)
+        es.index(index=index_name, id=document_id, document=data)
         # 日志记录成功信息
         logger.info(
-            f"Elastic Search Data inserted successfully. Index: {index_name}, Document ID: {document_id},Data: {data}")
+            f"Elastic Search Data inserted Successfully!!! Index: {index_name}, Document ID: {document_id},Data: {data}")
     except Exception as e:
-        logger.error(f"Elastic Search Failed to insert data. Error: {str(e)}")
+        logger.error(f"Elastic Search Failed to insert data!!! Error: {str(e)}")
 
 data = {
     "minReferencePrice": 35449,

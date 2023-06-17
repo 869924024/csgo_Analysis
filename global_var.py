@@ -86,7 +86,7 @@ class global_config:
 
     # es配置
     es_config = {
-        "host": "www.douyacai.work",
+        "host": "https://www.douyacai.work",
         "port": 9200,
         "username": "elastic",
         "password": "hjj2819597",
