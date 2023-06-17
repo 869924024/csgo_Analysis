@@ -7,7 +7,7 @@
 from youpin import youpin_template
 from youpin import youpin_getToken
 import global_var
-from platform import *
+from otherplatform import *
 
 if __name__ == '__main__':
     # 接码平台获取token插入数据库
