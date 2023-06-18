@@ -48,7 +48,7 @@ class global_config:
         "database": "csgo",
         "charset": "utf8",
         "pool_name": "csgo_pool",
-        "pool_size": 2,  # 连接池大小,越大爬取速度越快，调试时可以调小
+        "pool_size": 25,  # 连接池大小,越大爬取速度越快，调试时可以调小
     }
 
     # 请求头
