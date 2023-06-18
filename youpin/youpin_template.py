@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 global_config = global_config()
 import logging
+import log_uils
 
 
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断(不用锁，改成不同账号请求不会熔断)
@@ -95,7 +96,6 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
             # template_info 为null返回
             if not template_info:
                 logging.error(f"饰品id：{template_id[0]}不存在")
-                print("饰品id：", template_id[0], "不存在")
                 continue
             # 添加"Timestamp": time.time() * 1000,到饰品模版数据【重要】
             template_info["Timestamp"] = time.time() * 1000
@@ -142,7 +142,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
         template_info = getTemplateinfo(template_id, local_headers)
         # template_info 为null返回
         if not template_info:
-            print("饰品id：", template_id, "不存在")
+            print.info("饰品id：", template_id, "不存在")
             cursor.close()
             return
 
@@ -260,6 +260,7 @@ def batchTemplate_FromPage():
     :Create:  2023/6/17 14:34
     :Describe：批量爬取饰品模版 （数据库数据为空时使用）
     """
+    log_uils.refresh_logging()
     # 计算开始使用时间
     type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
     start = time.time()
@@ -283,7 +284,5 @@ def batchTemplate_FromPage():
     # 计算结束使用时间
     end = time.time()
     print("所有数据插入完成", "总耗时：", end - start, "秒")
-
-
 if __name__ == '__main__':
-    print(batchTemplate_FromDBId(1, 670, global_config.tokens[0]))
+    batchTemplate_FromPage()

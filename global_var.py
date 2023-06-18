@@ -3,7 +3,7 @@
 # @Version：V 0.1
 # @File : global_var.py.py
 # @desc : 全局配置类
-import os
+import logging
 
 import mysql.connector
 
@@ -48,7 +48,7 @@ class global_config:
         "database": "csgo",
         "charset": "utf8",
         "pool_name": "csgo_pool",
-        "pool_size": 2, # 连接池大小,越大爬取速度越快，调试时可以调小
+        "pool_size": 25,  # 连接池大小,越大爬取速度越快，调试时可以调小
     }
 
     # 请求头
@@ -83,7 +83,6 @@ class global_config:
     platform_keyword = "悠悠有品"
     # platform_keyword = "网易"
 
-
     # es配置
     es_config = {
         "host": "https://www.douyacai.work",
@@ -92,15 +91,15 @@ class global_config:
         "password": "hjj2819597",
     }
 
-    #日志配置
+    # 日志配置
     log_config = {
-        "filename": "/Users/huangjiajia/project/python/csgo_Analysis/log/", #日志输出路径，需要对应修改
+        "filename": "/Users/huangjiajia/project/python/csgo_Analysis/log/",  # 日志输出路径，需要对应修改
         "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
     }
 
-    commodity_prefix = "youpin_commodity_" # es索引前缀（饰品在售、出租等）
+    commodity_prefix = "youpin_commodity_"  # es索引前缀（饰品在售、出租等）
 
-    commodity_template_count = 0 #饰品模版总数 从数据库加载
+    commodity_template_count = 0  # 饰品模版总数 从数据库加载
     '''
     ========================================================================================================================
     公共配置 ☝️
@@ -118,9 +117,11 @@ class global_config:
     # 初始化
     def __init__(self):
         db_Tokens = self.getDBToken()
-        if db_Tokens :
+        if db_Tokens:
             # 初始化令牌
             self.tokens = db_Tokens
+        else:
+            logging.info("数据库中没有可用token,使用配置文件中token")
         # 初始化饰品模版总数
         if self.commodity_template_count == 0:
             self.commodity_template_count = self.getDBCommodityTemplateCount()
@@ -139,7 +140,7 @@ class global_config:
     def get_db_connection(self):
         return self.get_db_pool().get_connection()
 
-    def close_db_connection(self,conn):
+    def close_db_connection(self, conn):
         conn.close()
 
     # 连接池关闭
@@ -173,6 +174,9 @@ class global_config:
         result = cursor.fetchall()
         cursor.close()
         self.close_db_connection(connection)
+        if not result:
+            return []
+        logging.info("数据库token获取成功，总数：%s" % len(result))
         return [tup[2] for tup in result]
 
     def getDBCommodityTemplateCount(self):
@@ -191,9 +195,9 @@ class global_config:
         cursor.execute(sqlselect)
         result = cursor.fetchone()
         if not result:
-            print("数据库模版总数获取失败")
+            logging.error("数据库模版总数获取失败")
             return 0
-        print("数据库模版总数获取成功，总数：%s" % result[0])
+        logging.info("数据库模版总数获取成功，总数：%s" % result[0])
         cursor.close()
         self.close_db_connection(connection)
         return result[0]

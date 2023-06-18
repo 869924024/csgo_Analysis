@@ -231,3 +231,6 @@ def saveTokenToDB(token, mobile):
     cursor.close()
     print("存入token和mobile到数据库成功token:", token, "mobile:", mobile)
     global_config.close_db_connection(connection)
+
+if __name__ == '__main__':
+    checkDBToken(global_config.tokens)
