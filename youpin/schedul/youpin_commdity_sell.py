@@ -53,7 +53,7 @@ def crawlCommodityData(index, page_size):
     dataList = youpin_template.batchTemplate_FromDBId(index, page_size, token)
     # 插入数据到es
     es_operation.bulk_insert_data_to_es(index_name, dataList)
-    logging.info(f"爬取开始结束，当前标识：{index}，操作数据量：{page_size}，开始下标：{(index - 1) * page_size}，结束下标：{index * page_size}，当前索引名称：{index_name}")
+    logging.info(f"爬取结束，当前标识：{index}，操作数据量：{page_size}，开始下标：{(index - 1) * page_size}，结束下标：{index * page_size}，当前索引名称：{index_name}")
 
 def multiThreadCcrawlCommodityDataToTime():
     """
@@ -76,11 +76,9 @@ def multiThreadCcrawlCommodityDataToTime():
     # 获取数据库中的饰品模版总数
     template_count = global_config.commodity_template_count
     # 每页大小
-    page_size = template_count // tokenslen + 1
-    # 总页数
-    total_page = template_count // page_size + 1
+    page_size = template_count // tokenslen
     executor = ThreadPoolExecutor(max_workers=len(global_config.tokens))  # 使用多线程进行并发请求
-    for index in range(1, total_page):
+    for index in range(1, tokenslen+1):
         executor.submit(crawlCommodityData, index, page_size)
         time.sleep(0.5)  # 等待一小段时间，避免请求过于频繁
     executor.shutdown(wait=True)  # 等待所有任务完成
@@ -88,10 +86,5 @@ def multiThreadCcrawlCommodityDataToTime():
     end_time = time.time()
     end_time_str = datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
     logging.info(
-        f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{(end_time - start_time).total_seconds()}s")
+        f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{datetime.fromtimestamp(end_time - start_time).strftime('%S')}s")
 
-if __name__ == '__main__':
-    logging.info("测试日志记录")
-    logging.error("测试日志记录")
-    logging.debug("测试日志记录")
-    logging.warning("测试日志记录")
