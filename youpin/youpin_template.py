@@ -76,7 +76,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
             return
 
         # 提取饰品数据
-        template_info = templateinfo(template_id,local_headers)
+        template_info = getTemplateinfo(template_id,local_headers)
         # template_info 为null返回
         if not template_info:
             print("饰品id：", template_id, "不存在")
