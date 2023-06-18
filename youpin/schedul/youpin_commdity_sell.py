@@ -64,7 +64,7 @@ def buildCommodityDataToTime(data):
     return commodity_data
 
 
-def crawlCommodityData(template_id, thread_token):
+def crawlCommodityData(page,page_size,thread_token):
     """
     Parameters
     ----------
@@ -78,14 +78,19 @@ def crawlCommodityData(template_id, thread_token):
     local_headers = copy.deepcopy(global_config.youpinHeaders)
     # 每个线程单独token
     local_headers['authorization'] = thread_token
+    # # 获取数据库中的饰品模版总数
+    # template_count = global_config.commodity_template_count
+    # # 总页数
+    # total_page = template_count // page_size + 1
     # 获取饰品信息
-    data = getTemplateinfo(template_id, local_headers)
+    # data = batchTemplate_FromDBId(local_headers)
     # 构建商品数据
-    commodity_data = buildCommodityDataToTime(data)
-    # 获取索引名称
-    index_name = getCommodityIndexName()
-    # 插入数据到es
-    es_operation.insert_data_to_es(index_name, commodity_data)
+    # commodity_data = buildCommodityDataToTime(data)
+    # # 获取索引名称
+    # index_name = getCommodityIndexName()
+    # # 插入数据到es
+    # es_operation.insert_data_to_es(index_name, commodity_data)
+
 
 
 if __name__ == '__main__':

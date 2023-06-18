@@ -100,6 +100,7 @@ class global_config:
 
     commodity_prefix = "youpin_commodity_" # es索引前缀（饰品在售、出租等）
 
+    commodity_template_count = 0 #饰品模版总数 从数据库加载
     '''
     ========================================================================================================================
     公共配置 ☝️
@@ -120,6 +121,8 @@ class global_config:
         if db_Tokens :
             # 初始化令牌
             self.tokens = db_Tokens
+        # 初始化饰品模版总数
+        self.commodity_template_count = self.getDBCommodityTemplateCount()
 
     # 数据库连接池
     def get_db_pool(self):
@@ -170,3 +173,26 @@ class global_config:
         cursor.close()
         self.close_db_connection(connection)
         return [tup[2] for tup in result]
+
+    def getDBCommodityTemplateCount(self):
+        """
+        Parameters
+        ----------
+        Returns
+        -------
+        :Author:  douyacai
+        :Create:  2023/6/18 17:29
+        :Describe：数据库模版总数
+        """
+        connection = self.get_db_connection()
+        cursor = connection.cursor()
+        sqlselect = "select count(*) from youpin_template"
+        cursor.execute(sqlselect)
+        result = cursor.fetchone()
+        if not result:
+            print("数据库模版总数获取失败")
+            return 0
+        print("数据库模版总数获取成功，总数：%s" % result[0])
+        cursor.close()
+        self.close_db_connection(connection)
+        return result[0]

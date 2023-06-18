@@ -6,8 +6,10 @@ import json
 from global_var import global_config
 from concurrent.futures import ThreadPoolExecutor
 global_config = global_config()
+from log_uils import logger
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断(不用锁，改成不同账号请求不会熔断)
 # lock = threading.Lock()
+
 
 def getTemplateinfo(template_id,local_headers):
     """
@@ -46,6 +48,58 @@ def getTemplateinfo(template_id,local_headers):
     if not template_info:
         return
     return template_info
+
+def batchTemplate_FromDBId(page,page_size,thread_token):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/16 13:36
+    :Describe：分页从获取批量饰品模版数据
+    """
+    try:
+        # 创建 headers 的副本
+        local_headers = copy.deepcopy(global_config.youpinHeaders)
+        # 每个线程单独token
+        local_headers['authorization'] = thread_token
+        # 获取数据库连接
+        connection = global_config.get_db_connection()
+        # 获取当前页
+        current_page = page
+        # 获取当前页的起始位置
+        start = (current_page - 1) * page_size
+        # 获取当前页的结束位置
+        end = current_page * page_size
+        # 获取饰品模版id
+        sql_select = "SELECT id FROM youpin_template limit %s,%s"
+        cursor = connection.cursor()
+        cursor.execute(sql_select, (start, end))
+        result = cursor.fetchall()
+        # 关闭游标
+        cursor.close()
+        # 关闭数据库连接
+        global_config.close_db_connection(connection)
+
+        dataList = []
+        # 遍历饰品模版id
+        for template_id in result:
+            # 获取饰品模版数据
+            template_info = getTemplateinfo(template_id[0],local_headers)
+            # template_info 为null返回
+            if not template_info:
+                logger.error("饰品id：", template_id[0], "不存在")
+                continue
+            # 添加到列表
+            dataList.append(template_info)
+            # 间隔一定毫秒一次请求，不然会被熔断
+            time.sleep(0.1)
+        # 返回饰品模版数据
+        return dataList
+    except Exception as e:
+        logger.error("批量获取饰品模版数据异常：", e)
+
 
 def inserTemplate_FromID(template_id, connection, local_headers):
     """
@@ -220,3 +274,6 @@ def batchTemplate_FromPage():
     # 计算结束使用时间
     end = time.time()
     print("所有数据插入完成", "总耗时：", end - start, "秒")
+
+if __name__ == '__main__':
+    print(batchTemplate_FromDBId(1, 10, global_config.tokens[0]))
