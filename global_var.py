@@ -48,7 +48,7 @@ class global_config:
         "database": "csgo",
         "charset": "utf8",
         "pool_name": "csgo_pool",
-        "pool_size": 5, # 连接池大小,越大爬取速度越快，调试时可以调小
+        "pool_size": 2, # 连接池大小,越大爬取速度越快，调试时可以调小
     }
 
     # 请求头
@@ -122,7 +122,8 @@ class global_config:
             # 初始化令牌
             self.tokens = db_Tokens
         # 初始化饰品模版总数
-        self.commodity_template_count = self.getDBCommodityTemplateCount()
+        if self.commodity_template_count == 0:
+            self.commodity_template_count = self.getDBCommodityTemplateCount()
 
     # 数据库连接池
     def get_db_pool(self):

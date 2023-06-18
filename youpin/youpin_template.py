@@ -1,17 +1,19 @@
 import copy
 import time
-import logging
 import requests
 import json
 from global_var import global_config
 from concurrent.futures import ThreadPoolExecutor
+
 global_config = global_config()
-from log_uils import logger
+import logging
+
+
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断(不用锁，改成不同账号请求不会熔断)
 # lock = threading.Lock()
 
 
-def getTemplateinfo(template_id,local_headers):
+def getTemplateinfo(template_id, local_headers):
     """
     Parameters
     ----------
@@ -47,9 +49,12 @@ def getTemplateinfo(template_id,local_headers):
     # template_info 为null返回
     if not template_info:
         return
+    # 因为会频繁打印，好像会影响效率，所以注释掉（想看完整数据的话可以取消注释）
+    # logging.info(f"获取饰品模版数据成功，饰品模版id：{template_id},饰品模版数据：{template_info},时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
     return template_info
 
-def batchTemplate_FromDBId(page,page_size,thread_token):
+
+def batchTemplate_FromDBId(page, page_size, thread_token):
     """
     Parameters
     ----------
@@ -57,7 +62,7 @@ def batchTemplate_FromDBId(page,page_size,thread_token):
     -------
     :Author:  douyacai
     :Create:  2023/6/16 13:36
-    :Describe：分页从获取批量饰品模版数据
+    :Describe：分页从数据库获取批量饰品模版数据
     """
     try:
         # 创建 headers 的副本
@@ -86,11 +91,14 @@ def batchTemplate_FromDBId(page,page_size,thread_token):
         # 遍历饰品模版id
         for template_id in result:
             # 获取饰品模版数据
-            template_info = getTemplateinfo(template_id[0],local_headers)
+            template_info = getTemplateinfo(template_id[0], local_headers)
             # template_info 为null返回
             if not template_info:
-                logger.error("饰品id：", template_id[0], "不存在")
+                logging.error(f"饰品id：{template_id[0]}不存在")
+                print("饰品id：", template_id[0], "不存在")
                 continue
+            # 添加"Timestamp": time.time() * 1000,到饰品模版数据【重要】
+            template_info["Timestamp"] = time.time() * 1000
             # 添加到列表
             dataList.append(template_info)
             # 间隔一定毫秒一次请求，不然会被熔断
@@ -98,7 +106,8 @@ def batchTemplate_FromDBId(page,page_size,thread_token):
         # 返回饰品模版数据
         return dataList
     except Exception as e:
-        logger.error("批量获取饰品模版数据异常：", e)
+        logging.error("批量获取饰品模版数据异常：%s", str(e))
+
 
 
 def inserTemplate_FromID(template_id, connection, local_headers):
@@ -130,7 +139,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
             return
 
         # 提取饰品数据
-        template_info = getTemplateinfo(template_id,local_headers)
+        template_info = getTemplateinfo(template_id, local_headers)
         # template_info 为null返回
         if not template_info:
             print("饰品id：", template_id, "不存在")
@@ -224,7 +233,7 @@ def batchTemplate_FromID(start, end, thread_token):
     :Describe：批量扫描饰品模版
     """
 
-    print("检查范围：", start, "-", end, " 使用token:" , thread_token)
+    print("检查范围：", start, "-", end, " 使用token:", thread_token)
     connection = global_config.get_db_connection()
     # 创建 headers 的副本
     local_headers = copy.deepcopy(global_config.youpinHeaders)
@@ -238,7 +247,7 @@ def batchTemplate_FromID(start, end, thread_token):
         print("任务执行失败:", str(e))
     finally:
         global_config.close_db_connection(connection)
-    print("完成范围扫描：", start, "-", end, " 使用token:" , thread_token)
+    print("完成范围扫描：", start, "-", end, " 使用token:", thread_token)
 
 
 def batchTemplate_FromPage():
@@ -275,5 +284,6 @@ def batchTemplate_FromPage():
     end = time.time()
     print("所有数据插入完成", "总耗时：", end - start, "秒")
 
+
 if __name__ == '__main__':
-    print(batchTemplate_FromDBId(1, 10, global_config.tokens[0]))
+    print(batchTemplate_FromDBId(1, 670, global_config.tokens[0]))

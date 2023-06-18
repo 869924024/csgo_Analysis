@@ -37,7 +37,7 @@ console_handler.setFormatter(formatter)
 
 # 将处理程序添加到日志记录器
 logger.addHandler(file_handler)
-logger.addHandler(console_handler)
+#logger.addHandler(console_handler)
 
 def refresh_logging():
     global log_filename
@@ -50,7 +50,7 @@ def refresh_logging():
         file_handler.filename = log_filename
 
 if __name__ == '__main__':
-    logger.info("测试日志记录")
-    logger.error("测试日志记录")
-    logger.debug("测试日志记录")
-    logger.warning("测试日志记录")
+    logging.info("测试日志记录")
+    logging.error("测试日志记录")
+    logging.debug("测试日志记录")
+    logging.warning("测试日志记录")
