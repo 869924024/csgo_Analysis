@@ -11,7 +11,7 @@ import mysql.connector
 class global_config:
     _instance = None
 
-    # 令牌列表(越多令牌爬取得越快)
+    # 令牌列表(越多令牌爬取得越快)，数据库如果有令牌，优先使用数据库令牌
     tokens = [
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNWI1ODEyMWE5MDY0OGU0YTE5NDAxYzNiZjliNjU1NSIsIm5hbWVpZCI6IjM0MTM3ODciLCJJZCI6IjM0MTM3ODciLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxMzc4NyIsIk5hbWUiOiJZUDAwMDM0MTM3ODciLCJuYmYiOjE2ODY3OTM2NTksImV4cCI6MTY4NzY1NzY1OSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.QSOSxCYqduPOP2P94nVQG75dBwPeAWrGWKyjAsO-_1I',
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwNTdmMjlkMWZiYmU0MjQ1OWFkYjA2NjMyMTQ2N2YwZCIsIm5hbWVpZCI6IjMzNjM4MjMiLCJJZCI6IjMzNjM4MjMiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzM2MzgyMyIsIk5hbWUiOiJZUDAwMDMzNjM4MjMiLCJuYmYiOjE2ODYwNjA0ODAsImV4cCI6MTY4NjkyNDQ4MCwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.Pn_xsEidIEa0ZxY1ZvHAGP76_8BVVRoWrcxXKxs2Sm4',
@@ -148,7 +148,7 @@ class global_config:
     ========================================================================================================================
     公共方法 ☝️
     
-    私有方法 👇
+    私有方法 👇（其他模块不要引用，可能会引起循环依赖）
     ========================================================================================================================
     '''
 

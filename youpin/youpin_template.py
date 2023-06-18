@@ -9,6 +9,44 @@ global_config = global_config()
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断(不用锁，改成不同账号请求不会熔断)
 # lock = threading.Lock()
 
+def getTemplateinfo(template_id,local_headers):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/18 13:51
+    :Describe：单个饰品模版或数据-post请求-悠悠有品
+    """
+    # 请求数据
+    data = {
+        "appVersion": "5.1.1",
+        "gameId": 730,
+        "SessionId": "17A06643-B466-45ED-8495-15D11313572B",
+        "AppType": "3",
+        "templateId": template_id,
+        "Platform": "ios",
+        "Version": "5.1.1",
+        "listType": 15,
+    }
+
+    # 请求URL
+    url = "https://api.youpin898.com/api/homepage/v2/detail/template/info"
+
+    # 发送POST请求
+    response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=5)
+
+    # 解析响应数据
+    response_data = json.loads(response.text)
+
+    # 提取饰品数据
+    template_info = response_data["Data"]["TemplateInfo"]
+    # template_info 为null返回
+    if not template_info:
+        return
+    return template_info
+
 def inserTemplate_FromID(template_id, connection, local_headers):
     """
     Parameters
@@ -27,18 +65,6 @@ def inserTemplate_FromID(template_id, connection, local_headers):
         # 获取锁
         # lock.acquire()
 
-        # 请求数据
-        data = {
-            "appVersion": "5.1.1",
-            "gameId": 730,
-            "SessionId": "17A06643-B466-45ED-8495-15D11313572B",
-            "AppType": "3",
-            "templateId": template_id,
-            "Platform": "ios",
-            "Version": "5.1.1",
-            "listType": 15,
-        }
-
         # 判断数据是否已存在
         sql_select = "SELECT * FROM youpin_template WHERE id = %s"
         cursor = connection.cursor()
@@ -49,20 +75,11 @@ def inserTemplate_FromID(template_id, connection, local_headers):
             cursor.close()
             return
 
-        # 请求URL
-        url = "https://api.youpin898.com/api/homepage/v2/detail/template/info"
-
-        # 发送POST请求
-        response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=5)
-
-        # 解析响应数据
-        response_data = json.loads(response.text)
-
         # 提取饰品数据
-        template_info = response_data["Data"]["TemplateInfo"]
+        template_info = templateinfo(template_id,local_headers)
         # template_info 为null返回
         if not template_info:
-            #print("饰品id：", template_id, "不存在")
+            print("饰品id：", template_id, "不存在")
             cursor.close()
             return
 
@@ -150,7 +167,7 @@ def batchTemplate_FromID(start, end, thread_token):
     -------
     :Author:  douyacai
     :Create:  2023/6/16 13:36
-    :Describe：
+    :Describe：批量扫描饰品模版
     """
 
     print("检查范围：", start, "-", end, " 使用token:" , thread_token)
@@ -178,7 +195,7 @@ def batchTemplate_FromPage():
     -------
     :Author:  douyacai
     :Create:  2023/6/17 14:34
-    :Describe：批量爬取饰品模版
+    :Describe：批量爬取饰品模版 （数据库数据为空时使用）
     """
     # 计算开始使用时间
     type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）

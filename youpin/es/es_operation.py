@@ -11,6 +11,7 @@ from global_var import global_config
 import uuid
 from log_uils import logger
 import log_uils
+from elasticsearch.helpers import bulk
 
 global_config = global_config()
 
@@ -46,3 +47,36 @@ def insert_data_to_es(index_name, data):
         logger.error(f"Elastic Search Failed to insert data!!! Error: {str(e)}")
 
 
+def bulk_insert_data_to_es(index_name, data_list):
+    """
+    批量插入数据到ES
+    """
+    try:
+        es_url = "{}:{}".format(global_config.es_config["host"], global_config.es_config["port"])
+        # 创建Elasticsearch实例
+        es = Elasticsearch(
+            hosts=[es_url],
+            basic_auth=(global_config.es_config["username"], global_config.es_config["password"])
+        )
+
+        # 构建批量插入请求
+        actions = [
+            {
+                "_index": index_name,
+                "_id": str(uuid.uuid1()),
+                "_source": data
+            }
+            for data in data_list
+        ]
+
+        # 使用bulk插入数据
+        success, _ = bulk(es, actions)
+
+        # 检查插入是否成功
+        if success:
+            logger.info(f"Successfully bulk_insert {len(data_list)} documents to ES. data_list: {data_list}")
+        else:
+            logger.error("Failed to bulk_insert documents to ES.")
+
+    except Exception as e:
+        logger.error(f"Elastic Search Failed to bulk_insert data!!! Error: {str(e)}")
