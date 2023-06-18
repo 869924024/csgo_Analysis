@@ -93,7 +93,7 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
             template_info = getTemplateinfo(template_id[0], local_headers)
             # template_info 为null返回
             if not template_info:
-                logging.error(f"饰品id：{template_id[0]}不存在")
+                #logging.error(f"饰品id：{template_id[0]}不存在")
                 continue
             # 添加"Timestamp": time.time() * 1000,到饰品模版数据【重要】
             template_info["Timestamp"] = time.time() * 1000
@@ -262,7 +262,7 @@ def batchTemplate_FromPage():
     # 计算开始使用时间
     type = 1  # 1:从指定ID开始爬(推荐用这个) 2:从第一页开始爬（1-100页,不推荐,youpin的分页随机给饰品的数据，有时候会有重复的，所以跑多几次，保证数据的完整性）
     start = time.time()
-    executor = ThreadPoolExecutor(max_workers=len(global_config.tokens))  # 使用多线程进行并发请求
+    executor = ThreadPoolExecutor(max_workers=len(global_config.tokens)+1)  # 使用多线程进行并发请求
     total = 150000  # id总数
     if type == 1:
         rangIndex = total / len(global_config.tokens)
