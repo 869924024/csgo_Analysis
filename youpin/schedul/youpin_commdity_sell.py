@@ -46,16 +46,14 @@ def crawlCommodityData(index, page_size):
     """
     # 获取token
     token = global_config.tokens[index]
-    # 获取模版信息
-    dataList = youpin_template.batchTemplate_FromDBId(index, page_size, token)
     # 获取索引名称
     index_name = getCommodityIndexName()
-    logging.info(f"爬取开始——当前token：{token}，当前下标：{index}，操作数据量：{page_size}，当前索引名称：{index_name}")
-    # logging.info(f"当前token：{token}，当前下标：{index}，操作数据量：{page_size}，当前索引名称：{index_name}，数据集合：{dataList}")
+    logging.info(f"爬取开始，当前下标：{index}，操作数据量：{page_size}，开始下标：{(index - 1) * page_size}，结束下标：{index * page_size}，当前索引名称：{index_name}")
+    # 获取模版信息
+    dataList = youpin_template.batchTemplate_FromDBId(index, page_size, token)
     # 插入数据到es
     es_operation.bulk_insert_data_to_es(index_name, dataList)
-    logging.info(f"爬取开始结束当前token：{token}，当前下标：{index}，操作数据量：{page_size}，当前索引名称：{index_name}")
-
+    logging.info(f"爬取开始结束，当前标识：{index}，操作数据量：{page_size}，开始下标：{(index - 1) * page_size}，结束下标：{index * page_size}，当前索引名称：{index_name}")
 
 def multiThreadCcrawlCommodityDataToTime():
     """
@@ -70,7 +68,7 @@ def multiThreadCcrawlCommodityDataToTime():
     # 开始时间计算
     start_time = time.time()
     start_time_str = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
-    logging.info(f"批量爬取饰品数据落库es-在售、短租、长租等开始!!!!,开始时间：{start_time_str}")
+    logging.info(f"批量爬取饰品数据落库es-在售、短租、长租等开始!!请耐心等等（可以开启数据打印观察）!!,开始时间：{start_time_str}")
     # 刷新日志
     log_uils.refresh_logging()
     # 获取token数量
@@ -81,7 +79,7 @@ def multiThreadCcrawlCommodityDataToTime():
     page_size = template_count // tokenslen + 1
     # 总页数
     total_page = template_count // page_size + 1
-    executor = ThreadPoolExecutor(max_workers=1)  # 使用多线程进行并发请求
+    executor = ThreadPoolExecutor(max_workers=len(global_config.tokens))  # 使用多线程进行并发请求
     for index in range(1, total_page):
         executor.submit(crawlCommodityData, index, page_size)
         time.sleep(0.5)  # 等待一小段时间，避免请求过于频繁
@@ -97,7 +95,3 @@ if __name__ == '__main__':
     logging.error("测试日志记录")
     logging.debug("测试日志记录")
     logging.warning("测试日志记录")
-    # 开始时间计算
-    start_time = time.time()
-    start_time_str = datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S')
-    logging.info(f"批量爬取饰品数据落库es-在售、短租、长租等开始!!!!,开始时间：{start_time_str}")

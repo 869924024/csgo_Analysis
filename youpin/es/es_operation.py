@@ -39,7 +39,7 @@ def insert_data_to_es(index_name, data):
         es.index(index=index_name, id=document_id, document=data)
         # 日志记录成功信息
         logging.info(
-            f"Elastic Search Data inserted Successfully!!! Index: {index_name}, Document ID: {document_id},Data: {data}")
+            f"Elastic Search Data inserted Successfully!!! Index: {index_name}, Document ID: {document_id}")
     except Exception as e:
         logging.error(f"Elastic Search Failed to insert data!!! Error: {str(e)}")
 
@@ -81,7 +81,7 @@ def bulk_insert_data_to_es(index_name, data_list):
 
         # 检查插入是否成功
         if success:
-            logging.info(f"Successfully bulk_insert {len(data_list)} documents to ES. data_list: {data_list}")
+            logging.info(f"Successfully bulk_insert {len(data_list)} documents to ES.")
         else:
             logging.error("Failed to bulk_insert documents to ES.")
 

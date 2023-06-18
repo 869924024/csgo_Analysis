@@ -76,12 +76,10 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
         current_page = page
         # 获取当前页的起始位置
         start = (current_page - 1) * page_size
-        # 获取当前页的结束位置
-        end = current_page * page_size
         # 获取饰品模版id
         sql_select = "SELECT id FROM youpin_template limit %s,%s"
         cursor = connection.cursor()
-        cursor.execute(sql_select, (start, end))
+        cursor.execute(sql_select, (start, page_size))
         result = cursor.fetchall()
         # 关闭游标
         cursor.close()
