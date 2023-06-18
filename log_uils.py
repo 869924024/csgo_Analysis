@@ -29,7 +29,7 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
 # 创建日志格式器
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(global_config.log_config["format"])
 
 # 将格式器添加到处理程序
 file_handler.setFormatter(formatter)

@@ -1,8 +1,11 @@
 # @Time : 2023/6/17 16:02
 # @Author : douyacai
 # @Version：V 0.1
-# @File : youpin_realTime.py
+# @File : es_operation.py
 # @desc : 悠悠有品实时爬取落库es
+import datetime
+import time
+
 from elasticsearch import Elasticsearch
 from global_var import global_config
 import uuid
@@ -13,6 +16,15 @@ global_config = global_config()
 
 
 def insert_data_to_es(index_name, data):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/18 13:35
+    :Describe：es插入数据
+    """
     log_uils.refresh_logging()
     try:
         es_url = "{}:{}".format(global_config.es_config["host"], global_config.es_config["port"])
@@ -33,28 +45,4 @@ def insert_data_to_es(index_name, data):
     except Exception as e:
         logger.error(f"Elastic Search Failed to insert data!!! Error: {str(e)}")
 
-data = {
-    "minReferencePrice": 35449,
-    "Id": 1627,
-    "CommodityName": "AK-47 | 二西莫夫 (略有磨损)",
-    "CommodityHashName": "AK-47 | Asiimov (Minimal Wear)",
-    "GroupHashName": "AK-47 | Asiimov",
-    "IconUrl": "https://youpin.img898.com/economy/image/7ed3a58260a511ec86c8dca9049909c3",
-    "MinPrice": 3553,
-    "LeaseUnitPrice": 0.47,
-    "LongLeaseUnitPrice": 0.35,
-    "LeaseDeposit": 356,
-    "LeasePriceScale": None,
-    "OnSaleCount": 2027,
-    "OnLeaseCount": 345,
-    "TypeName": "步枪",
-    "Rarity": "隐秘",
-    "Quality": "普通",
-    "Exterior": "略有磨损",
-    "Timestamp": "1686757564550"
-}
-index_name = "youpin_commodity_2023.6.23"
-
-if __name__ == '__main__':
-    insert_data_to_es(index_name, data)
 

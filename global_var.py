@@ -95,10 +95,10 @@ class global_config:
     #日志配置
     log_config = {
         "filename": "/Users/huangjiajia/project/python/csgo_Analysis/log/", #日志输出路径，需要对应修改
-        "level": "DEBUG",
         "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
-        "datefmt": "%Y-%m-%d %H:%M:%S",
     }
+
+    commodity_prefix = "youpin_commodity_" # es索引前缀（饰品在售、出租等）
 
     '''
     ========================================================================================================================
