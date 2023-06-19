@@ -4,6 +4,7 @@
 # @File : global_var.py.py
 # @desc : 全局配置类
 import logging
+import threading
 
 import mysql.connector
 
@@ -100,6 +101,9 @@ class global_config:
     commodity_prefix = "youpin_commodity_"  # es索引前缀（饰品在售、出租等）
 
     commodity_template_count = 0  # 饰品模版总数 从数据库加载
+
+    # 加锁，防止多线程对数据库连接池的连接操作出现异常
+    lock = threading.Lock()
     '''
     ========================================================================================================================
     公共配置 ☝️
@@ -128,13 +132,17 @@ class global_config:
 
     # 数据库连接池
     def get_db_pool(self):
-        # 若存在链接池则直接返回
-        if hasattr(self, "pool"):
-            return self.pool
-        # 不存在则创建
-        else:
-            self.pool = mysql.connector.pooling.MySQLConnectionPool(**self.db_config)
-            return self.pool
+        self.lock.acquire()
+        try:
+            # 若存在链接池则直接返回
+            if hasattr(self, "pool"):
+                return self.pool
+            # 不存在则创建
+            else:
+                self.pool = mysql.connector.pooling.MySQLConnectionPool(**self.db_config)
+                return self.pool
+        finally:
+            self.lock.release()
 
     # 获取链接
     def get_db_connection(self):
@@ -145,9 +153,13 @@ class global_config:
 
     # 连接池关闭
     def close_db_pool(self):
-        if hasattr(self.pool, "pool"):
-            self.pool.close()
-            delattr(self.pool, "pool")
+        self.lock.acquire()
+        try:
+            if hasattr(self.pool, "pool"):
+                self.pool.close()
+                delattr(self.pool, "pool")
+        finally:
+            self.lock.release()
 
     '''
     ========================================================================================================================
