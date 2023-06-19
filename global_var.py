@@ -39,7 +39,7 @@ class global_config:
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZjIyZDllYmNiOTU0MjhmOWQzMzg2MGFlZmY1YjJhYSIsIm5hbWVpZCI6IjM0MTUwNDIiLCJJZCI6IjM0MTUwNDIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTA0MiIsIk5hbWUiOiJZUDAwMDM0MTUwNDIiLCJuYmYiOjE2ODY4MDk4MDksImV4cCI6MTY4NzY3MzgwOSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.NSq-2vcBjRPnnB39Myn0R0C4CVJKi3p_8iZweMHzZDE',
         # 添加更多令牌
     ]
-    db_pool_size =2 # 连接池大小,越大爬取速度越快，调试时可以调小
+    db_pool_size =25 # 连接池大小,越大爬取速度越快，调试时可以调小
 
     # 数据库连接配置
     db_config = {
@@ -96,7 +96,7 @@ class global_config:
 
     commodity_template_count = 0  # 饰品模版总数 从数据库加载
 
-    # 加锁，防止多线程对数据库连接池的连接操作出现异常
+    # 加锁，防止多线程对数据库连接池的连接操作出现异常（可能会导致效率下降，尽量在批量操作时，仅仅获取一个连接，使用完后再释放）
     lock = threading.Lock()
     # 信号量，控制数据库连接池的大小,防止多线程过多使用连接导致数据库池耗尽
     semaphore = Semaphore(db_pool_size)

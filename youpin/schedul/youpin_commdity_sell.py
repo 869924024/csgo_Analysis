@@ -85,3 +85,4 @@ def multiThreadCcrawlCommodityDataToTime():
     end_time_str = datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
     logging.info(
         f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{time.strftime('%H:%M:%S', time.gmtime(end_time - start_time))}")
+
