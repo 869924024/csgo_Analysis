@@ -24,13 +24,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # 创建文件处理程序
-file_handler = logging.FileHandler(log_filename)
+file_handler = logging.FileHandler(log_filename, encoding='utf-8')
 file_handler.setLevel(logging.ERROR)
 file_handler.setLevel(logging.INFO)
 # 创建控制台处理程序
 console_handler = logging.StreamHandler()
-file_handler.setLevel(logging.ERROR)
-file_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.ERROR)
+console_handler.setLevel(logging.INFO)
 
 # 创建日志格式器
 formatter = logging.Formatter(log_config["format"])
