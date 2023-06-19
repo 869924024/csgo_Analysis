@@ -4,11 +4,13 @@
 # @File : es_operation.py
 # @desc : 悠悠有品实时爬取落库es
 import logging
+from datetime import datetime
 from elasticsearch import Elasticsearch
 from global_var import global_config
 import uuid
 import log_uils
 from elasticsearch.helpers import bulk
+
 
 def insert_data_to_es(index_name, data):
     """
@@ -26,7 +28,8 @@ def insert_data_to_es(index_name, data):
         # 创建Elasticsearch实例
         es = Elasticsearch(
             hosts=[es_url],
-            basic_auth=(global_config.es_config["username"], global_config.es_config["password"])
+            basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
+            ca_certs=global_config.es_config["ca_certs"]
         )
 
         # 生成唯一的document_id
@@ -84,3 +87,55 @@ def bulk_insert_data_to_es(index_name, data_list):
 
     except Exception as e:
         logging.error(f"Elastic Search Failed to bulk_insert data!!! Error: {str(e)}")
+
+
+if __name__ == '__main__':
+    # 测试批量写入es
+    data_list = [
+        {
+            "minReferencePrice": 35449,
+            "Id": 1627,
+            "CommodityName": "AK-47 | 二西莫夫 (略有磨损)6",
+            "CommodityHashName": "AK-47 | Asiimov (Minimal Wear)",
+            "GroupHashName": "AK-47 | Asiimov",
+            "IconUrl": "https://youpin.img898.com/economy/image/7ed3a58260a511ec86c8dca9049909c3",
+            "MinPrice": 3553,
+            "LeaseUnitPrice": 0.47,
+            "LongLeaseUnitPrice": 0.35,
+            "LeaseDeposit": 356,
+            "LeasePriceScale": None,
+            "OnSaleCount": 2027,
+            "OnLeaseCount": 345,
+            "TypeName": "步枪",
+            "Rarity": "隐秘",
+            "Quality": "普通",
+            "Exterior": "略有磨损",
+            "Timestamp": "1686584759000"
+        },
+        {
+            "minReferencePrice": 35449,
+            "Id": 222,
+            "CommodityName": "AK-47 | 二西莫夫 (略有磨损)6",
+            "CommodityHashName": "AK-47 | Asiimov (Minimal Wear)",
+            "GroupHashName": "AK-47 | Asiimov",
+            "IconUrl": "https://youpin.img898.com/economy/image/7ed3a58260a511ec86c8dca9049909c3",
+            "MinPrice": 3553,
+            "LeaseUnitPrice": 0.47,
+            "LongLeaseUnitPrice": 0.35,
+            "LeaseDeposit": 356,
+            "LeasePriceScale": None,
+            "OnSaleCount": 2027,
+            "OnLeaseCount": 345,
+            "TypeName": "步枪",
+            "Rarity": "隐秘",
+            "Quality": "普通",
+            "Exterior": "略有磨损",
+            "Timestamp": "1686584795000"
+        }
+    ]
+    # 获取当前日期
+    current_date = datetime.now().date()
+    # 生成新的索引名称
+    new_index_name = f"{global_config.commodity_prefix}{current_date.year}.{current_date.month}.{current_date.day}"
+
+    bulk_insert_data_to_es(new_index_name, data_list)

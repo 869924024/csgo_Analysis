@@ -90,6 +90,7 @@ class global_config:
         "port": 9200,
         "username": "elastic",
         "password": "hjj2819597",
+        "ca_certs": "/Users/huangjiajia/project/python/csgo_Analysis/cert/http_ca.crt"
     }
 
     commodity_prefix = "youpin_commodity_"  # es索引前缀（饰品在售、出租等）
