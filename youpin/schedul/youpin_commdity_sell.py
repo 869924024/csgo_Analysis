@@ -10,7 +10,7 @@ import schedule
 
 from global_var import global_config
 from youpin.es import es_operation
-from youpin import youpin_template
+from youpin import youpin_template, youpin_getToken
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import log_uils
@@ -90,7 +90,16 @@ def multiThreadCcrawlCommodityDataToTime():
         f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{time.strftime('%H:%M:%S', time.gmtime(end_time - start_time))}")
 
 def job():
-    # 将你的 multiThreadCcrawlCommodityDataToTime 函数放在这里
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/19 20:29
+    :Describe：定时任务执行的方法
+    """
+    youpin_getToken.checkDBToken(global_config.tokens)
     multiThreadCcrawlCommodityDataToTime()
 
 # 每10分钟运行一次 job 函数
@@ -106,6 +115,7 @@ def checkJob():
     :Create:  2023/6/19 20:23
     :Describe：定时任务，每天每10分钟定时爬取悠悠有品商品销售数据
     """
+    job()  # 执行一次任务
     while True:
         schedule.run_pending()
         time.sleep(1)
