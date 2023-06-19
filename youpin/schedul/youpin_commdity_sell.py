@@ -80,10 +80,10 @@ def multiThreadCcrawlCommodityDataToTime():
     executor = ThreadPoolExecutor(max_workers=tokenslen+1)  # 使用多线程进行并发请求
     for index in range(1, tokenslen+1):
         executor.submit(crawlCommodityData, index, page_size)
-        time.sleep(0.5)  # 等待一小段时间，避免请求过于频繁
+        time.sleep(1)  # 等待一小段时间，避免请求过于频繁
     executor.shutdown(wait=True)  # 等待所有任务完成
     # 结束时间
     end_time = time.time()
     end_time_str = datetime.fromtimestamp(end_time).strftime('%Y-%m-%d %H:%M:%S')
     logging.info(
-        f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{datetime.fromtimestamp(end_time - start_time).strftime('%S')}s")
+        f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{time.strftime('%H:%M:%S', time.gmtime(end_time - start_time))}")
