@@ -4,10 +4,10 @@ import requests
 import json
 from global_var import global_config
 from concurrent.futures import ThreadPoolExecutor
-
-global_config = global_config()
 import logging
 import log_uils
+import traceback
+
 
 
 # 创建锁对象 间隔一定毫秒一次请求，不然会被熔断(不用锁，改成不同账号请求不会熔断)
@@ -98,10 +98,12 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
             template_info["Timestamp"] = time.time() * 1000
             # 添加到列表
             dataList.append(template_info)
+            # 间隔一定毫秒一次请求，不然会被熔断
+            time.sleep(0.1)
         # 返回饰品模版数据
         return dataList
     except Exception as e:
-        logging.error("批量获取饰品模版数据异常：%s", str(e))
+        logging.error("批量获取饰品模版数据异常：%s", traceback.format_exc())
 
 
 
@@ -151,7 +153,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
         cursor.close()
         print("饰品：", template_info["CommodityName"], " Id:", template_info["Id"], "插入成功")
     except Exception as e:
-        logging.exception("任务执行失败: %s", str(e))
+        logging.exception("任务执行失败: %s", traceback.format_exc())
 
     # finally:
     # 在finally块中释放锁，确保即使发生异常也能释放锁

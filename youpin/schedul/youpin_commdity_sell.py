@@ -12,8 +12,6 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import log_uils
 
-global_config = global_config()
-
 
 def getCommodityIndexName():
     """

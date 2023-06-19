@@ -10,9 +10,6 @@ import uuid
 import log_uils
 from elasticsearch.helpers import bulk
 
-global_config = global_config()
-
-
 def insert_data_to_es(index_name, data):
     """
     Parameters

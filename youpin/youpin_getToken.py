@@ -10,8 +10,6 @@ import requests
 import json
 from otherplatform import platformCode
 
-global_config = global_config()
-
 
 def youpinSendCode(mobile):
     """

@@ -8,7 +8,7 @@ import json
 import re
 import requests
 from global_var import global_config
-global_config = global_config()
+
 def getPlatformMobile():
     """
     Parameters

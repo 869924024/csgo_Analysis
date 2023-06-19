@@ -5,10 +5,8 @@
 # @desc : 全局配置类
 import logging
 import threading
-
 import mysql.connector
-
-
+import  log_uils
 class global_config:
     _instance = None
 
@@ -49,7 +47,7 @@ class global_config:
         "database": "csgo",
         "charset": "utf8",
         "pool_name": "csgo_pool",
-        "pool_size": 25,  # 连接池大小,越大爬取速度越快，调试时可以调小
+        "pool_size": 2,  # 连接池大小,越大爬取速度越快，调试时可以调小
     }
 
     # 请求头
@@ -90,12 +88,6 @@ class global_config:
         "port": 9200,
         "username": "elastic",
         "password": "hjj2819597",
-    }
-
-    # 日志配置
-    log_config = {
-        "filename": "/Users/huangjiajia/project/python/csgo_Analysis/log/",  # 日志输出路径，需要对应修改
-        "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
     }
 
     commodity_prefix = "youpin_commodity_"  # es索引前缀（饰品在售、出租等）
@@ -149,17 +141,17 @@ class global_config:
         return self.get_db_pool().get_connection()
 
     def close_db_connection(self, conn):
-        conn.close()
-
-    # 连接池关闭
-    def close_db_pool(self):
         self.lock.acquire()
         try:
-            if hasattr(self.pool, "pool"):
-                self.pool.close()
-                delattr(self.pool, "pool")
+            conn.close()
         finally:
             self.lock.release()
+    # 连接池关闭
+    def close_db_pool(self):
+        if hasattr(self.pool, "pool"):
+            self.pool.close()
+            delattr(self.pool, "pool")
+
 
     '''
     ========================================================================================================================
@@ -213,3 +205,5 @@ class global_config:
         cursor.close()
         self.close_db_connection(connection)
         return result[0]
+
+global_config = global_config()
