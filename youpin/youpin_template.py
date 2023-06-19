@@ -99,7 +99,7 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
             # 添加到列表
             dataList.append(template_info)
             # 间隔一定毫秒一次请求，不然会被熔断
-            time.sleep(0.2)
+            time.sleep(0.35)
         # 返回饰品模版数据
         return dataList
     except Exception as e:
@@ -139,7 +139,7 @@ def inserTemplate_FromID(template_id, connection, local_headers):
         template_info = getTemplateinfo(template_id, local_headers)
         # template_info 为null返回
         if not template_info:
-            print("饰品id：", template_id, "不存在")
+            #print("饰品id：", template_id, "不存在")
             cursor.close()
             return
 

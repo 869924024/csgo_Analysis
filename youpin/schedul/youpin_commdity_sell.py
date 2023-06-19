@@ -5,6 +5,9 @@
 # @desc : 定时任务，每天定时爬取悠悠有品商品销售数据
 from datetime import datetime
 import time
+
+import schedule
+
 from global_var import global_config
 from youpin.es import es_operation
 from youpin import youpin_template
@@ -86,3 +89,23 @@ def multiThreadCcrawlCommodityDataToTime():
     logging.info(
         f"批量爬取饰品数据落库es-在售、短租、长租等完成!!!!,开始时间：{start_time_str},结束时间：{end_time_str},耗时：{time.strftime('%H:%M:%S', time.gmtime(end_time - start_time))}")
 
+def job():
+    # 将你的 multiThreadCcrawlCommodityDataToTime 函数放在这里
+    multiThreadCcrawlCommodityDataToTime()
+
+# 每10分钟运行一次 job 函数
+schedule.every(10).minutes.do(job)
+
+def checkJob():
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/6/19 20:23
+    :Describe：定时任务，每天每10分钟定时爬取悠悠有品商品销售数据
+    """
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
