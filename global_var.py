@@ -4,6 +4,7 @@
 # @File : global_var.py.py
 # @desc : 全局配置类
 import logging
+from threading import Semaphore
 import threading
 import mysql.connector
 import  log_uils
@@ -38,6 +39,7 @@ class global_config:
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZjIyZDllYmNiOTU0MjhmOWQzMzg2MGFlZmY1YjJhYSIsIm5hbWVpZCI6IjM0MTUwNDIiLCJJZCI6IjM0MTUwNDIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTA0MiIsIk5hbWUiOiJZUDAwMDM0MTUwNDIiLCJuYmYiOjE2ODY4MDk4MDksImV4cCI6MTY4NzY3MzgwOSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.NSq-2vcBjRPnnB39Myn0R0C4CVJKi3p_8iZweMHzZDE',
         # 添加更多令牌
     ]
+    db_pool_size =2 # 连接池大小,越大爬取速度越快，调试时可以调小
 
     # 数据库连接配置
     db_config = {
@@ -47,7 +49,7 @@ class global_config:
         "database": "csgo",
         "charset": "utf8",
         "pool_name": "csgo_pool",
-        "pool_size": 2,  # 连接池大小,越大爬取速度越快，调试时可以调小
+        "pool_size": db_pool_size,
     }
 
     # 请求头
@@ -96,6 +98,8 @@ class global_config:
 
     # 加锁，防止多线程对数据库连接池的连接操作出现异常
     lock = threading.Lock()
+    # 信号量，控制数据库连接池的大小,防止多线程过多使用连接导致数据库池耗尽
+    semaphore = Semaphore(db_pool_size)
     '''
     ========================================================================================================================
     公共配置 ☝️
@@ -125,6 +129,7 @@ class global_config:
     # 数据库连接池
     def get_db_pool(self):
         self.lock.acquire()
+        self.semaphore.acquire()
         try:
             # 若存在链接池则直接返回
             if hasattr(self, "pool"):
@@ -145,6 +150,7 @@ class global_config:
         try:
             conn.close()
         finally:
+            self.semaphore.release()
             self.lock.release()
     # 连接池关闭
     def close_db_pool(self):
