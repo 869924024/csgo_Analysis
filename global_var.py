@@ -90,7 +90,6 @@ class global_config:
 
     # es配置
     es_config = {
-        "url": "https://www.douyacai.work:9200",  # es地址
         "host": "https://www.douyacai.work",
         "port": 9200,
         "username": "elastic",
@@ -104,12 +103,8 @@ class global_config:
 
     # 加锁，防止多线程对数据库连接池的连接操作出现异常（可能会导致效率下降，尽量在批量操作时，仅仅获取一个连接，使用完后再释放）
     db_lock = threading.Lock()
-    # 加锁，防止多线程对es连接池的连接操作出现异常（可能会导致效率下降，尽量在批量操作时，仅仅获取一个连接，使用完后再释放）
-    es_lock = threading.Lock()
     # 信号量，控制数据库连接池的大小,防止多线程过多使用连接导致数据库池耗尽
     db_semaphore = Semaphore(pool_size)
-    # 信号量，控制es池的大小,防止多线程过多使用导致es池耗尽
-    es_semaphore = Semaphore(pool_size)
     '''
     ========================================================================================================================
     公共配置 ☝️
@@ -151,7 +146,7 @@ class global_config:
         finally:
             self.db_lock.release()
 
-    # 获取链接
+    # db获取链接
     def get_db_connection(self):
         return self.get_db_pool().get_connection()
 
@@ -163,57 +158,11 @@ class global_config:
             self.db_semaphore.release()
             self.db_lock.release()
 
-    # 连接池关闭
+    # db连接池关闭
     def close_db_pool(self):
         if hasattr(self.pool, "pool"):
             self.pool.close()
             delattr(self.pool, "pool")
-
-    # es链接池
-    def get_es_pool(self):
-        self.es_lock.acquire()
-        self.es_semaphore.acquire()
-        try:
-            # 若存在链接池则直接返回
-            if hasattr(self, "es_pool"):
-                return self.es_pool
-            # 不存在则创建
-            else:
-                self.es_pool = Elasticsearch(
-                    hosts=[{
-                        "host": self.es_config["host"],
-                        "port": self.es_config["port"],
-                        "use_ssl": True,
-                        "http_auth": (self.es_config["username"], self.es_config["password"]),
-                        "ca_certs": self.es_config["ca_certs"],
-                        #"verify_certs": False  # 不校验证书
-                    }],
-                    maxsize=self.pool_size
-                )
-                return self.es_pool
-        finally:
-            self.es_lock.release()
-
-    # 获取链接
-    def get_es_connection(self):
-        return Elasticsearch(self.get_es_pool())
-
-    # es链接关闭
-    def close_es_connection(self, conn):
-        self.es_lock.acquire()
-        try:
-            # conn.close() # 释放连接，es8.80，此方法不存在,但是我们还得控制信号量
-            pass
-        finally:
-            self.es_semaphore.release()
-            self.es_lock.release()
-
-    # es连接池关闭
-    def close_es_pool(self):
-        if hasattr(self.es_pool, "pool"):
-            self.es_pool.close()
-            delattr(self.es_pool, "pool")
-
     '''
     ========================================================================================================================
     公共方法 ☝️
