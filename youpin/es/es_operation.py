@@ -6,6 +6,8 @@
 import logging
 import warnings
 from datetime import datetime
+
+from more_itertools import chunked
 from elastic_transport import SecurityWarning
 from elasticsearch import Elasticsearch
 from urllib3.exceptions import InsecureRequestWarning
@@ -17,6 +19,7 @@ from elasticsearch.helpers import bulk
 # 忽略警告，减少日志，生产环境慎用
 warnings.filterwarnings("ignore", category=InsecureRequestWarning)
 warnings.filterwarnings("ignore", category=SecurityWarning)
+
 
 def insert_data_to_es(index_name, data):
     """
@@ -38,7 +41,7 @@ def insert_data_to_es(index_name, data):
             hosts=[es_url],
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
             # ca_certs=global_config.es_config["ca_certs"],  # 证书
-            verify_certs=False  # 不校验证书
+            #verify_certs=False,  # 不校验证书
         )
 
         # 生成唯一的document_id
@@ -55,19 +58,19 @@ def insert_data_to_es(index_name, data):
         # 释放信号量
         global_config.es_semaphore.release()
 
-
-def bulk_insert_data_to_es(index_name, data_list):
+def bulk_insert_data_to_es(index_name, data_list, batch_size):
     """
     Parameters
     ----------
-    Returns
-    -------
-    :Author:  douyacai
-    :Create:  2023/6/18 22:09
-    :Describe： 批量插入数据到ES
+    index_name : str
+        索引名称
+    data_list : list
+        数据列表
+    batch_size : int
+        每个批次的大小
     """
     try:
-        # 信号量，防止es链接池耗尽
+        # 信号量，防止ES连接池耗尽
         global_config.es_semaphore.acquire()
         if len(data_list) == 0 or not data_list:
             logging.info(f"Empty data_list, no need to bulk_insert data to ES. data_list: {data_list}")
@@ -78,28 +81,33 @@ def bulk_insert_data_to_es(index_name, data_list):
         es = Elasticsearch(
             hosts=[es_url],
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
-            ca_certs=global_config.es_config["ca_certs"],  # 证书
-            #verify_certs=False # 不校验证书
+            # ca_certs=global_config.es_config["ca_certs"],  # 证书
+            # verify_certs=False,  # 不校验证书
         )
 
-        # 构建批量插入请求
-        actions = [
-            {
-                "_index": index_name,
-                "_id": str(uuid.uuid1()),
-                "_source": data
-            }
-            for data in data_list
-        ]
+        # 将数据按批次大小切分成多个批次
+        data_batches = list(chunked(data_list, batch_size))
 
-        # 使用bulk插入数据
-        success, _ = bulk(es, actions)
+        # 遍历每个批次插入数据
+        for batch in data_batches:
+            # 构建批量插入请求
+            actions = [
+                {
+                    "_index": index_name,
+                    "_id": str(uuid.uuid1()),
+                    "_source": data
+                }
+                for data in batch
+            ]
 
-        # 检查插入是否成功
-        if success:
-            logging.info(f"Successfully bulk_insert {len(data_list)} documents to ES.")
-        else:
-            logging.error("Failed to bulk_insert documents to ES.")
+            # 使用bulk插入数据
+            success, _ = bulk(es, actions)
+
+            # 检查插入是否成功
+            if success:
+                logging.info(f"Successfully bulk_insert {len(batch)} documents to ES.")
+            else:
+                logging.error("Failed to bulk_insert documents to ES.")
     except Exception as e:
         logging.error(f"Elastic Search Failed to bulk_insert data!!! Error: {str(e)}")
     finally:
@@ -156,4 +164,4 @@ if __name__ == '__main__':
     # 生成新的索引名称
     new_index_name = f"{global_config.commodity_prefix}{current_date.year}.{current_date.month}.{current_date.day}"
 
-    bulk_insert_data_to_es(new_index_name, data_list)
+    bulk_insert_data_to_es(new_index_name, data_list, 1000)

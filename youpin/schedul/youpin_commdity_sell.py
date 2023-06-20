@@ -102,8 +102,8 @@ def job():
     youpin_getToken.checkDBToken(global_config.tokens)
     multiThreadCcrawlCommodityDataToTime()
 
-# 每10分钟运行一次 job 函数
-schedule.every(10).minutes.do(job)
+# 每15分钟运行一次 job 函数
+schedule.every(15).minutes.do(job)
 
 def checkJob():
     """
