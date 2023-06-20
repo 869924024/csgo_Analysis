@@ -29,6 +29,8 @@ def insert_data_to_es(index_name, data):
     :Describe：es插入数据
     """
     try:
+        # 信号量，防止es链接池耗尽
+        global_config.es_semaphore.acquire()
         log_uils.refresh_logging()
         es_url = "{}:{}".format(global_config.es_config["host"], global_config.es_config["port"])
         # 创建Elasticsearch实例
@@ -49,6 +51,9 @@ def insert_data_to_es(index_name, data):
             f"Elastic Search Data inserted Successfully!!! Index: {index_name}, Document ID: {document_id}")
     except Exception as e:
         logging.error(f"Elastic Search Failed to insert data!!! Error: {str(e)}")
+    finally:
+        # 释放信号量
+        global_config.es_semaphore.release()
 
 
 def bulk_insert_data_to_es(index_name, data_list):
@@ -62,6 +67,8 @@ def bulk_insert_data_to_es(index_name, data_list):
     :Describe： 批量插入数据到ES
     """
     try:
+        # 信号量，防止es链接池耗尽
+        global_config.es_semaphore.acquire()
         if len(data_list) == 0 or not data_list:
             logging.info(f"Empty data_list, no need to bulk_insert data to ES. data_list: {data_list}")
             return
@@ -71,8 +78,8 @@ def bulk_insert_data_to_es(index_name, data_list):
         es = Elasticsearch(
             hosts=[es_url],
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
-            #ca_certs=global_config.es_config["ca_certs"],  # 证书
-            verify_certs=False # 不校验证书
+            ca_certs=global_config.es_config["ca_certs"],  # 证书
+            #verify_certs=False # 不校验证书
         )
 
         # 构建批量插入请求
@@ -93,9 +100,11 @@ def bulk_insert_data_to_es(index_name, data_list):
             logging.info(f"Successfully bulk_insert {len(data_list)} documents to ES.")
         else:
             logging.error("Failed to bulk_insert documents to ES.")
-
     except Exception as e:
         logging.error(f"Elastic Search Failed to bulk_insert data!!! Error: {str(e)}")
+    finally:
+        # 释放信号量
+        global_config.es_semaphore.release()
 
 
 if __name__ == '__main__':
