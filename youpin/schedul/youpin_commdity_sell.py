@@ -53,7 +53,7 @@ def crawlCommodityData(index, page_size):
     # 获取模版信息
     dataList = youpin_template.batchTemplate_FromDBId(index, page_size, token)
     # 插入数据到es
-    es_operation.bulk_insert_data_to_es(index_name, dataList)
+    es_operation.bulk_insert_data_to_es(index_name, dataList,global_config.es_config["batch_size"])
     logging.info(f"爬取结束，当前标识：{index}，操作数据量：{page_size}，开始下标：{(index - 1) * page_size}，结束下标：{index * page_size}，当前索引名称：{index_name}")
 
 def multiThreadCcrawlCommodityDataToTime():
@@ -102,8 +102,8 @@ def job():
     youpin_getToken.checkDBToken(global_config.tokens)
     multiThreadCcrawlCommodityDataToTime()
 
-# 每10分钟运行一次 job 函数
-schedule.every(10).minutes.do(job)
+# 每15分钟运行一次 job 函数
+schedule.every(15).minutes.do(job)
 
 def checkJob():
     """

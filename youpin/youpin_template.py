@@ -1,4 +1,5 @@
 import copy
+import random
 import time
 import requests
 import json
@@ -98,8 +99,8 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
             template_info["Timestamp"] = time.time() * 1000
             # 添加到列表
             dataList.append(template_info)
-            # 间隔一定毫秒一次请求，不然会被熔断
-            time.sleep(0.5)
+            # 随机0.3-0.5间隔一定毫秒一次请求，不然会被熔断
+            time.sleep(random.uniform(0.3, 0.5))
         # 返回饰品模版数据
         return dataList
     except Exception as e:
