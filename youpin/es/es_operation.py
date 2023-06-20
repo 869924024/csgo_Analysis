@@ -3,6 +3,12 @@
 # @Version：V 0.1
 # @File : es_operation.py
 # @desc : 悠悠有品实时爬取落库es
+#################
+# 本地导入（控制台启动需要）
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+#################
 import logging
 import warnings
 from datetime import datetime
