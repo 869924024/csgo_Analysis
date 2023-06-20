@@ -48,6 +48,9 @@ def insert_data_to_es(index_name, data):
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
             # ca_certs=global_config.es_config["ca_certs"],  # 证书
             #verify_certs=False,  # 不校验证书
+            timeout=30,
+            max_retries=10,
+            retry_on_timeout=True
         )
 
         # 生成唯一的document_id
@@ -89,6 +92,9 @@ def bulk_insert_data_to_es(index_name, data_list, batch_size):
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
             # ca_certs=global_config.es_config["ca_certs"],  # 证书
             # verify_certs=False,  # 不校验证书
+            timeout=30,
+            max_retries=10,
+            retry_on_timeout=True
         )
 
         # 将数据按批次大小切分成多个批次
@@ -111,7 +117,8 @@ def bulk_insert_data_to_es(index_name, data_list, batch_size):
 
             # 检查插入是否成功
             if success:
-                logging.info(f"Successfully bulk_insert {len(batch)} documents to ES.")
+                #logging.info(f"Successfully bulk_insert {len(batch)} documents to ES.") #注释掉减少日志
+                pass
             else:
                 logging.error("Failed to bulk_insert documents to ES.")
     except Exception as e:
