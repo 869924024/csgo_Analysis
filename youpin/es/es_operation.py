@@ -4,13 +4,19 @@
 # @File : es_operation.py
 # @desc : 悠悠有品实时爬取落库es
 import logging
+import warnings
 from datetime import datetime
+from elastic_transport import SecurityWarning
 from elasticsearch import Elasticsearch
+from urllib3.exceptions import InsecureRequestWarning
 from global_var import global_config
 import uuid
 import log_uils
 from elasticsearch.helpers import bulk
 
+# 忽略警告，减少日志，生产环境慎用
+warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+warnings.filterwarnings("ignore", category=SecurityWarning)
 
 def insert_data_to_es(index_name, data):
     """
@@ -24,19 +30,11 @@ def insert_data_to_es(index_name, data):
     """
     try:
         log_uils.refresh_logging()
-        es_url = "{}:{}".format(global_config.es_config["host"], global_config.es_config["port"])
-        # 创建Elasticsearch实例
-        es = Elasticsearch(
-            hosts=[es_url],
-            basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
-            ca_certs=global_config.es_config["ca_certs"]
-        )
-
         # 生成唯一的document_id
         document_id = str(uuid.uuid1())
 
         # 插入数据
-        es.index(index=index_name, id=document_id, document=data)
+        global_config.get_es_connection().index(index=index_name, id=document_id, document=data)
         # 日志记录成功信息
         logging.info(
             f"Elastic Search Data inserted Successfully!!! Index: {index_name}, Document ID: {document_id}")
@@ -63,7 +61,9 @@ def bulk_insert_data_to_es(index_name, data_list):
         # 创建Elasticsearch实例
         es = Elasticsearch(
             hosts=[es_url],
-            basic_auth=(global_config.es_config["username"], global_config.es_config["password"])
+            basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
+            #ca_certs=global_config.es_config["ca_certs"],  # 证书
+            verify_certs=False # 不校验证书
         )
 
         # 构建批量插入请求
