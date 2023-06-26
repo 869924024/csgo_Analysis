@@ -48,7 +48,7 @@ def insert_data_to_es(index_name, data):
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
             # ca_certs=global_config.es_config["ca_certs"],  # 证书
             #verify_certs=False,  # 不校验证书
-            timeout=30,
+            request_timeout=30,
             max_retries=10,
             retry_on_timeout=True
         )
@@ -92,7 +92,7 @@ def bulk_insert_data_to_es(index_name, data_list, batch_size):
             basic_auth=(global_config.es_config["username"], global_config.es_config["password"]),
             # ca_certs=global_config.es_config["ca_certs"],  # 证书
             # verify_certs=False,  # 不校验证书
-            timeout=30,
+            request_timeout=30,
             max_retries=10,
             retry_on_timeout=True
         )
