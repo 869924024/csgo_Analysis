@@ -51,6 +51,9 @@ def refresh_logging():
     if current_date not in log_filename:
         print("更新日志文件配置，时间：", current_date)
         log_filename = os.path.join(log_config["filename"], f"ElasticSearch_insert_{current_date}.log")
+        log_directory = os.path.dirname(log_filename)
+        if not os.path.exists(log_directory):
+            os.makedirs(log_directory)
         file_handler.filename = log_filename
 
 if __name__ == '__main__':
