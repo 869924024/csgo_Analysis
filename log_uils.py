@@ -43,6 +43,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
+
 def refresh_logging():
     global log_filename
 
@@ -54,7 +55,20 @@ def refresh_logging():
         log_directory = os.path.dirname(log_filename)
         if not os.path.exists(log_directory):
             os.makedirs(log_directory)
-        file_handler.filename = log_filename
+
+        # 从日志记录器中移除现有的处理程序
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
+
+        # 创建一个新的文件处理程序，使用更新后的日志文件名
+        file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+        file_handler.setLevel(logging.ERROR)
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+
+        # 将新的文件处理程序添加到日志记录器
+        logger.addHandler(file_handler)
+
 
 if __name__ == '__main__':
     logging.info("测试日志记录")
