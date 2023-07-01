@@ -149,9 +149,9 @@ def checkDBToken(tokens):
             continue
         new_tokens.append(index)
     tokens = new_tokens
-    if len(global_config.tokens) <= 40:
+    if len(global_config.tokens) < 40:
         print("数据库token数量不足40个，开始补充token")
-        insertTokenToDB(41 - len(global_config.tokens))
+        insertTokenToDB(40 - len(global_config.tokens))
     print("检查数据库所有token是否过期结束")
     global_config.close_db_connection(connection)
     return tokens
