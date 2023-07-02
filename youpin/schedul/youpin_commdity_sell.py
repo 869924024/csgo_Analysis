@@ -99,7 +99,7 @@ def job():
     :Create:  2023/6/19 20:29
     :Describe：定时任务执行的方法
     """
-    youpin_getToken.checkDBToken(global_config.tokens)
+    youpin_getToken.checkDBToken()
     multiThreadCcrawlCommodityDataToTime()
 
 # 每15分钟运行一次 job 函数

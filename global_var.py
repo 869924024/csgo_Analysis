@@ -43,6 +43,15 @@ class global_config:
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZjIyZDllYmNiOTU0MjhmOWQzMzg2MGFlZmY1YjJhYSIsIm5hbWVpZCI6IjM0MTUwNDIiLCJJZCI6IjM0MTUwNDIiLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxNTA0MiIsIk5hbWUiOiJZUDAwMDM0MTUwNDIiLCJuYmYiOjE2ODY4MDk4MDksImV4cCI6MTY4NzY3MzgwOSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.NSq-2vcBjRPnnB39Myn0R0C4CVJKi3p_8iZweMHzZDE',
         # 添加更多令牌
     ]
+    #token对应手机号，数据库如果有手机号，优先使用数据库手机号
+    mobiles = [
+        '13415026',
+        '3307402',
+        '3415042',
+        '3415042',
+        # 添加更多手机号
+    ]
+
     pool_size = 25  # 各种连接池大小,越大爬取速度越快，调试时可以调小
 
     # 数据库连接配置
@@ -71,7 +80,26 @@ class global_config:
         "platform": "ios",
         "user-agent": "",
     }
-
+    #user操作请求头
+    youpinUserHeaders = {
+        "content-type": "application/json",
+        "apptype": "1",
+        "version": "5.1.1",
+        "content-encoding": "gzip",
+        "devicesysversion": "13.6",
+        "app-version": "5.1.1",
+        "api-version": "1.0",
+        "accept": "*/*",
+        "accept-encoding": "gzip",
+        "accept-language": "zh-Hans;q=1.0, en;q=0.9",
+        "platform": "ios",
+        "user-agent": "",
+    }
+    # youpin修改的密码
+    youpinPgassword = {
+        "NewPwd": "hjj2819597",
+        "ConfirmPwd": "hjj2819597"
+    }
     #  接码平台get请求头
     platformHeaders = {
         "content-type": "application/json",
@@ -125,9 +153,12 @@ class global_config:
     # 初始化
     def __init__(self):
         db_Tokens = self.getDBToken()
-        if db_Tokens:
+        db_Moblies = self.getDBMobile()
+        if db_Tokens and db_Moblies:
             # 初始化令牌
             self.tokens = db_Tokens
+            # 初始化手机号
+            self.mobiles = db_Moblies
         else:
             logging.info("数据库中没有可用token,使用配置文件中token")
         # 初始化饰品模版总数
@@ -195,6 +226,28 @@ class global_config:
             return []
         logging.info("数据库token获取成功，总数：%s" % len(result))
         return [tup[2] for tup in result]
+
+    def getDBMobile(self):
+        """
+        Parameters
+        ----------
+        Returns
+        -------
+        :Author:  douyacai
+        :Create:  2023/6/16 17:37
+        :Describe：批量获取数据库已存在的token
+        """
+        connection = self.get_db_connection()
+        cursor = connection.cursor()
+        sqlselect = "select * from youpin_phone_token"
+        cursor.execute(sqlselect)
+        result = cursor.fetchall()
+        cursor.close()
+        self.close_db_connection(connection)
+        if not result:
+            return []
+        logging.info("数据库mobile获取成功，总数：%s" % len(result))
+        return [tup[1] for tup in result]
 
     def getDBCommodityTemplateCount(self):
         """

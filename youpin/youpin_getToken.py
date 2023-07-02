@@ -90,8 +90,9 @@ def youpinGetUserInfo(token, connection):
     response_data = json.loads(response.text)
     # 若response_data存在字段Data则说明token有效
     if "Data" not in response_data:
-        print("token失效token:", token)
-        deleteToken(token)
+        # print("token失效token:", token)
+        # deleteToken(token) 弃用删除token，改为用手机号登陆获取token
+
         return
 
     data = response_data["Data"]
@@ -127,10 +128,10 @@ def deleteToken(token):
     cursor.execute(sqldelete, (token,))
     connection.commit()
     cursor.close()
-    print("删除过期token成功token:", token)
+    print("删除过期token成功，token:", token)
 
 
-def checkDBToken(tokens):
+def checkDBToken():
     """
     Parameters
     ----------
@@ -143,18 +144,27 @@ def checkDBToken(tokens):
     connection = global_config.get_db_connection()
     print("开始检查数据库所有token是否过期")
     new_tokens = []
-    for index in tokens:
-        mobile = youpinGetUserInfo(index, connection)
+    new_mobiles = []
+    for index in range(len(global_config.tokens)):
+        mobile = youpinGetUserInfo(global_config.tokens[index], connection)
         if not mobile and mobile is None:
-            continue
-        new_tokens.append(index)
-    tokens = new_tokens
+            curToken = PwdSignIn(global_config.mobiles[index], connection)
+            if curToken:
+                new_tokens.append(curToken)
+                new_mobiles.append(global_config.mobiles[index])
+            else:
+                print("获取用户信息失败(token和密码都失败)")
+                deleteToken(global_config.tokens[index])
+        else:
+            new_tokens.append(global_config.tokens[index])
+            new_mobiles.append(global_config.mobiles[index])
+    global_config.tokens = new_tokens
+    global_config.mobiles = new_mobiles
     if len(global_config.tokens) < 40:
         print("数据库token数量不足40个，开始补充token")
         insertTokenToDB(40 - len(global_config.tokens))
     print("检查数据库所有token是否过期结束")
     global_config.close_db_connection(connection)
-    return tokens
 
 
 def insertTokenToDB(loop):
@@ -212,9 +222,12 @@ def insertTokenToDB(loop):
 
         # 步骤5: 将token和mobile存入数据库
         saveTokenToDB(token, mobile)
-
-        # 步骤6: 更新token
+        # 步骤6: 修改密码
+        modityPassword(token)
+        # 步骤7: 更新token
         global_config.tokens.append(token)
+        # 步骤8: 更新手机号
+        global_config.mobiles.append(mobile)
 
 
 def saveTokenToDB(token, mobile):
@@ -233,9 +246,84 @@ def saveTokenToDB(token, mobile):
     cursor.execute(sqlinsert, (token, mobile))
     connection.commit()
     cursor.close()
-    print("存入token和mobile到数据库成功token:", token, "mobile:", mobile)
+    print("存入token和mobile到数据库成功，token:", token, "mobile:", mobile)
     global_config.close_db_connection(connection)
 
 
+def modityPassword(token):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/7/2 12:50
+    :Describe：修改密码（后续用密码登陆）
+    """
+    # 每个线程单独token
+    global_config.youpinUserHeaders['authorization'] = token
+    # 请求URL
+    url = "https://api.youpin898.com/api/user/Account/Pwd"
+
+    # 发送POST请求
+    response = requests.put(url, headers=global_config.youpinUserHeaders,
+                            data=json.dumps(global_config.youpinPgassword))
+    # 解析响应数据
+    response_data = json.loads(response.text)
+
+    data = response_data["Msg"]
+    if data == "密码修改成功":
+        print("修改密码成功，token:", token)
+        connection = global_config.get_db_connection()
+        cursor = connection.cursor()
+        sqlselect = "select * from youpin_phone_token where token=%s"
+        cursor.execute(sqlselect, (token,))
+        result = cursor.fetchone()
+        if result and not result[3]:
+            sqlupdate = "update youpin_phone_token set password=%s where token=%s"
+            cursor.execute(sqlupdate, (global_config.youpinPgassword["NewPwd"], token))
+            connection.commit()
+            cursor.close()
+            print("数据库修改密码成功，token:", token)
+        global_config.close_db_connection(connection)
+        return True
+
+
+def PwdSignIn(mobile, connection):
+    """
+    Parameters
+    ----------
+    Returns
+    -------
+    :Author:  douyacai
+    :Create:  2023/7/2 17:45
+    :Describe：根据手机号登陆获取token（密码在配置中配置）
+    """
+    # 请求URL
+    url = "https://api.youpin898.com/api/user/Auth/PwdSignIn"
+    data = {
+        "UserName": mobile,
+        "UserPwd": global_config.youpinPgassword["NewPwd"],
+        "SessionId": "",
+        "Code": "",
+        "TenDay": 1
+    }
+    # 发送POST请求
+    response = requests.post(url, headers=global_config.youpinUserHeaders, data=json.dumps(data))
+    # 解析响应数据
+    response_data = json.loads(response.text)
+    if response_data["Msg"] == "登录成功":
+        print("登陆成功，token: Bearer", response_data["Data"]["Token"])
+        token = "Bearer " + response_data["Data"]["Token"]
+        cursor = connection.cursor()
+        sqlupdate = "update youpin_phone_token set token=%s where mobile=%s"
+        cursor.execute(sqlupdate, (token, mobile))
+        connection.commit()
+        cursor.close()
+        print("数据库修改token成功:", token)
+        return token
+    return
+
+
 if __name__ == '__main__':
-    checkDBToken(global_config.tokens)
+    checkDBToken()
