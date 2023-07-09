@@ -96,7 +96,7 @@ class global_config:
         "user-agent": "",
     }
     # youpin修改的密码
-    youpinPgassword = {
+    youpinPassword = {
         "NewPwd": "hjj2819597",
         "ConfirmPwd": "hjj2819597"
     }

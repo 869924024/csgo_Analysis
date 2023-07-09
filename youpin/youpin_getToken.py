@@ -267,7 +267,7 @@ def modityPassword(token):
 
     # 发送POST请求
     response = requests.put(url, headers=global_config.youpinUserHeaders,
-                            data=json.dumps(global_config.youpinPgassword))
+                            data=json.dumps(global_config.youpinPassword))
     # 解析响应数据
     response_data = json.loads(response.text)
 
@@ -281,7 +281,7 @@ def modityPassword(token):
         result = cursor.fetchone()
         if result and not result[3]:
             sqlupdate = "update youpin_phone_token set password=%s where token=%s"
-            cursor.execute(sqlupdate, (global_config.youpinPgassword["NewPwd"], token))
+            cursor.execute(sqlupdate, (global_config.youpinPassword["NewPwd"], token))
             connection.commit()
             cursor.close()
             print("数据库修改密码成功，token:", token)
@@ -303,7 +303,7 @@ def PwdSignIn(mobile, connection):
     url = "https://api.youpin898.com/api/user/Auth/PwdSignIn"
     data = {
         "UserName": mobile,
-        "UserPwd": global_config.youpinPgassword["NewPwd"],
+        "UserPwd": global_config.youpinPassword["NewPwd"],
         "SessionId": "",
         "Code": "",
         "TenDay": 1
