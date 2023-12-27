@@ -36,24 +36,28 @@ def getTemplateinfo(template_id, local_headers):
         "Version": "5.1.1",
         "listType": 15,
     }
-
     # 请求URL
     url = "https://api.youpin898.com/api/homepage/v2/detail/template/info"
-
-    # 发送POST请求
-    response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=5)
-
-    # 解析响应数据
-    response_data = json.loads(response.text)
-
-    # 提取饰品数据
-    template_info = response_data["Data"]["TemplateInfo"]
-    # template_info 为null返回
-    if not template_info:
-        return
-    # 因为会频繁打印，好像会影响效率，所以注释掉（想看完整数据的话可以取消注释）
-    # logging.info(f"获取饰品模版数据成功，饰品模版id：{template_id},饰品模版数据：{template_info},时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
-    return template_info
+    attempt = 0  # http尝试次数
+    while attempt < global_config.max_attempts:
+        try:
+            # 发送POST请求
+            response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=5)
+            # 解析响应数据
+            response_data = json.loads(response.text)
+            # 提取饰品数据
+            template_info = response_data["Data"]["TemplateInfo"]
+            # template_info 为null返回
+            if not template_info:
+                return
+            # 因为会频繁打印，好像会影响效率，所以注释掉（想看完整数据的话可以取消注释）
+            # logging.info(f"获取饰品模版数据成功，饰品模版id：{template_id},饰品模版数据：{template_info},时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}")
+            return template_info
+        except Exception as e:
+            attempt += 1
+            logging.error("获取饰品模版数据异常：%s", traceback.format_exc())
+            time.sleep(1)
+            continue
 
 
 def batchTemplate_FromDBId(page, page_size, thread_token):
@@ -99,8 +103,8 @@ def batchTemplate_FromDBId(page, page_size, thread_token):
             template_info["Timestamp"] = time.time() * 1000
             # 添加到列表
             dataList.append(template_info)
-            # 随机0.3-0.5间隔一定毫秒一次请求，不然会被熔断
-            time.sleep(random.uniform(0.3, 0.5))
+            # 随机0.5-1间隔一定毫秒一次请求，不然会被熔断
+            time.sleep(random.uniform(0.5, 1))
         # 返回饰品模版数据
         return dataList
     except Exception as e:

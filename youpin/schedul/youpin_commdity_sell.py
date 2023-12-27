@@ -3,6 +3,7 @@
 # @Version：V 0.1
 # @File : youpin_commdity_sell.py
 # @desc : 定时任务，每天定时爬取悠悠有品商品销售数据
+import threading
 from datetime import datetime
 import time
 
@@ -97,13 +98,19 @@ def job():
     -------
     :Author:  douyacai
     :Create:  2023/6/19 20:29
-    :Describe：定时任务执行的方法
+    :Describe：定时任务执行的方法-用线程进行，防止schedule开始时间被覆盖
     """
+    # 启动一个新线程来执行耗时任务
+    t = threading.Thread(target=execute_time_consuming_task)
+    t.start()
+
+def execute_time_consuming_task():
+    # 在这里执行耗时操作，无需使用sleep
     youpin_getToken.checkDBToken()
     multiThreadCcrawlCommodityDataToTime()
 
-# 每15分钟运行一次 job 函数
-schedule.every(15).minutes.do(job)
+# 每60分钟运行一次 job 函数
+schedule.every(60).minutes.do(job)
 
 def checkJob():
     """

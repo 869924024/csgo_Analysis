@@ -53,7 +53,7 @@ class global_config:
     ]
 
     pool_size = 25  # 各种连接池大小,越大爬取速度越快，调试时可以调小
-
+    max_attempts = 5 # http最大尝试次数
     # 数据库连接配置
     db_config = {
         "host": "www.douyacai.work",
