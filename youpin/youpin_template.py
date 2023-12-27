@@ -41,8 +41,8 @@ def getTemplateinfo(template_id, local_headers):
     attempt = 0  # http尝试次数
     while attempt < global_config.max_attempts:
         try:
-            # 发送POST请求
-            response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=5)
+            # 发送POST请求 60秒超时
+            response = requests.post(url, headers=local_headers, data=json.dumps(data), timeout=60)
             # 解析响应数据
             response_data = json.loads(response.text)
             # 提取饰品数据
