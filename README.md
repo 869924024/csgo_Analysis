@@ -2,13 +2,18 @@
 对csgo饰品平台爬取（饰品售价、租金等），利用es存储。
 目前完成平台：某某有品。
 后期可以自行扩展平台，添加前端展示做大盘，也可以用来做数据分析、时间序列算法搞预测等等，底层大体框架是没问题的。
-
+kibana一些大盘图（频率没调很快，机器太拉，如果你账户够多机器够好的话1分钟全量爬一次都行）：
+![WechatIMG9770](https://github.com/869924024/csgo_Analysis/assets/53663993/506b1eac-0a27-41c5-ac7d-f709730c9614)
+![WechatIMG4824](https://github.com/869924024/csgo_Analysis/assets/53663993/43db5cac-9656-4ddc-ba13-783d87b73bcd)
+![WechatIMG1542](https://github.com/869924024/csgo_Analysis/assets/53663993/83e0b81c-8be8-4ced-9e57-b613db6e228e)
 
 整体架构：
 ## 1.1数据结构设计
 ### 1.1.1所有饰品的模版（mysql youpin_template）
 由于模版不用实时爬取，或者定时任务，则存入数据库。
 -- 饰品模版类 
+![image](https://github.com/869924024/csgo_Analysis/assets/53663993/41e08a23-d315-4df9-9f0f-6c4710075fe5)
+
 CREATE TABLE `youpin_template` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '模版id\n',
   `CommodityName` varchar(255) DEFAULT NULL COMMENT '饰品全名',
@@ -25,6 +30,17 @@ CREATE TABLE `youpin_template` (
   KEY `groupName` (`GroupHashName`) USING BTREE,
   KEY `id_name_groupName` (`id`,`CommodityName`,`GroupHashName`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=104318 DEFAULT CHARSET=utf8;
+
+-- 账号token缓存表 （全自动接码创建账号并存储到表中，缓存过期自动执行登陆）
+CREATE TABLE `youpin_phone_token` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `mobile` varchar(255) DEFAULT NULL,
+  `token` varchar(5000) DEFAULT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8;
+
+
 ## 1.2饰品的在售、出租、求购的价格和数量（es存储）
 定时任务30分钟爬取一次所有商品的数据（大概1w5），考虑到是增量的爬取，所以用es进行存储，机器预计有一台先做单机存储，后续出现瓶颈再考虑优化或扩展。
 1. 创建一个以"youpin_commodity_*"的索引模版，用于存储饰品数据。 （不同平台可以考虑不同的索引设计）
@@ -189,13 +205,17 @@ getMsg	token：必填，调用getToken接口获得到的token，phoneNo：必填
 2.2饰品的在售、出租、求购的价格和数量（es,定好饰品模版，根据模版创建对应索引，索引带上时间）
 1. 遍历数据库所有的模版id，多线程去请求并写入es（看情况是否需要消息队列去减少链接，若单体服务顶不住可能得弄集群）
 2. 需要支持：1.多账号，2.多代理，3.爬取间隔=最小熔断时间
+3. 
 # 3.反爬机制的处理
-## 3.1多账号请求
+## 3.1多账号请求 （单账号多线程速度太快会被限流）
 利用接码平台注册多个账号，并提取token，多线程多个token进行请求（还不知道ip是否会影响，若影响则需要每个账号一个代理）
+全自动接码创建账号并存储到表中，缓存过期自动执行。
 ## 3.2ip代理
 待定
+
 ## 3.3请求熔断机制
-还未测出熔断机制，若存在可能的解方案：爬取间隔=最小熔断时间
+目前也仅仅发现是针对账号的qps做的限流
+
 # 4.目前问题
 ## 4.1 项目运行没问题，过几天后会卡住，有可能造成了死锁
 解决方案：看是否能找出死锁的现场，或者对用锁的地方try catch，利用finaly释放锁，实在不行就只能去掉锁。
