@@ -2,15 +2,16 @@
 # @Author : douyacai
 # @Version：V 0.1
 # @File : global_var.py.py
-# @desc : 全局配置类
+# @desc : 全局配置类  一些自定义配置
 import os
 
 import mysql.connector
 
-
+# 下面的配置，敏感的地方用***脱敏，改成自己的配置就行
 class global_config:
     _instance = None
 
+    
     # 令牌列表(越多令牌爬取得越快)，数据库如果有令牌，优先使用数据库令牌
     tokens = [
         'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNWI1ODEyMWE5MDY0OGU0YTE5NDAxYzNiZjliNjU1NSIsIm5hbWVpZCI6IjM0MTM3ODciLCJJZCI6IjM0MTM3ODciLCJ1bmlxdWVfbmFtZSI6IllQMDAwMzQxMzc4NyIsIk5hbWUiOiJZUDAwMDM0MTM3ODciLCJuYmYiOjE2ODY3OTM2NTksImV4cCI6MTY4NzY1NzY1OSwiaXNzIjoieW91cGluODk4LmNvbSIsImF1ZCI6InVzZXIifQ.QSOSxCYqduPOP2P94nVQG75dBwPeAWrGWKyjAsO-_1I',
@@ -42,9 +43,9 @@ class global_config:
 
     # 数据库连接配置
     db_config = {
-        "host": "www.douyacai.work",
+        "host": "*********8",
         "user": "csgo",
-        "password": "hjj2819597",
+        "password": "**********",
         "database": "csgo",
         "charset": "utf8",
         "pool_name": "csgo_pool",
@@ -78,7 +79,7 @@ class global_config:
     }
 
     # 接码平台token
-    platform_token = "hjj869924024-3023061510023121399162938"
+    platform_token = "***869924024-******1399162938"
     # 接码平台关键词（短信接码关键件，悠悠有品-悠悠有品，buff-网易）
     platform_keyword = "悠悠有品"
     # platform_keyword = "网易"
@@ -86,15 +87,15 @@ class global_config:
 
     # es配置
     es_config = {
-        "host": "https://www.douyacai.work",
+        "host": "https://www.*****.work",
         "port": 9200,
         "username": "elastic",
-        "password": "hjj2819597",
+        "password": "***********",
     }
 
     #日志配置
     log_config = {
-        "filename": "/Users/huangjiajia/project/python/csgo_Analysis/log/", #日志输出路径，需要对应修改
+        "filename": "/Users/*********/project/python/csgo_Analysis/log/", #日志输出路径，需要对应修改
         "format": "%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
     }
 
