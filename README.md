@@ -4,7 +4,7 @@
 后期可以自行扩展平台，添加前端展示做大盘，也可以用来做数据分析、时间序列算法搞预测等等，底层大体框架是没问题的。
 kibana一些大盘图（频率没调很快，机器太拉，如果你账户够多机器够好的话1分钟全量爬一次都行）：
 ![WechatIMG9770](https://github.com/869924024/csgo_Analysis/assets/53663993/506b1eac-0a27-41c5-ac7d-f709730c9614)
-![WechatIMG4824](https://github.com/869924024/csgo_Analysis/assets/53663993/43db5cac-9656-4ddc-ba13-783d87b73bcd)
+![WechatIMG14543](https://github.com/user-attachments/assets/82667174-18a0-4390-bd9f-aada11438a58)
 ![WechatIMG1542](https://github.com/869924024/csgo_Analysis/assets/53663993/83e0b81c-8be8-4ced-9e57-b613db6e228e)
 
 整体架构：
