@@ -14,7 +14,8 @@ kibana一些大盘图（频率没调很快，机器太拉，如果你账户够�
 -- 饰品模版类 
 ![image](https://github.com/869924024/csgo_Analysis/assets/53663993/41e08a23-d315-4df9-9f0f-6c4710075fe5)
 
-CREATE TABLE `youpin_template` (
+
+`CREATE TABLE `youpin_template` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '模版id\n',
   `CommodityName` varchar(255) DEFAULT NULL COMMENT '饰品全名',
   `CommodityHashName` varchar(255) DEFAULT NULL COMMENT '饰品hash名\n',
@@ -29,16 +30,18 @@ CREATE TABLE `youpin_template` (
   KEY `name` (`CommodityName`) USING BTREE,
   KEY `groupName` (`GroupHashName`) USING BTREE,
   KEY `id_name_groupName` (`id`,`CommodityName`,`GroupHashName`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=104318 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=104318 DEFAULT CHARSET=utf8;`
+  
+
 
 -- 账号token缓存表 （全自动接码创建账号并存储到表中，缓存过期自动执行登陆）
-CREATE TABLE `youpin_phone_token` (
+`CREATE TABLE `youpin_phone_token` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `mobile` varchar(255) DEFAULT NULL,
   `token` varchar(5000) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8;`
 
 
 ## 1.2饰品的在售、出租、求购的价格和数量（es存储）
@@ -166,12 +169,14 @@ POST /commodity/_search
   "from": 0
 }
 ## 1.3 token记录（不同平台对应自己的token表）
+
+`
 CREATE TABLE `youpin_phone_token` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `mobile` varchar(255) DEFAULT NULL,
   `token` varchar(5000) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8;`
 
 平台对接api：
 根网址（baseUrl）：
